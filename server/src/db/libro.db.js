@@ -1,3 +1,4 @@
+import { normalizeString } from "../utils/normalizeString.js";
 import { autorDB } from "./autor.db.js";
 import { autoreaDB } from "./autorea.db.js";
 import { copiaDB } from "./copia.db.js";
@@ -23,7 +24,7 @@ export const libroDB = {
 			session.startTransaction();
 
 			//LIBRO
-			const libroRes = await db.collection(collName).insertOne({ titulo }, { session });
+			const libroRes = await db.collection(collName).insertOne({ titulo: normalizeString(titulo) }, { session });
 			const libro_id = libroRes.insertedId;
 
 			//AUTORES
@@ -34,7 +35,7 @@ export const libroDB = {
 
 			//Retirar los nombres existentes del input
 			const pendientes = autores
-				.map(n => autorDB.normalizeNombre(n))
+				.map(n => normalizeString(n))
 				.filter(x => !existentesNombre.includes(x))
 
 			//Si alguno es nuevo autor, crearlo
@@ -111,6 +112,11 @@ export const libroDB = {
 		const libro = await db.collection(collName)
 			.findOne({ _id: id });
 		return libro;
+	},
+
+	async updateOne(id, titulo) {
+		const res = await db.collection(collName).updateOne({ _id: id }, { $set: { titulo } });
+		return res;
 	},
 
 	async remove(id) {

@@ -1,23 +1,22 @@
-import { getDB } from "./setup.db.js";
+import { normalizeString } from "../utils/normalizeString.js";
+import { getClient, getDB } from "./setup.db.js";
 
 const collName = 'autor';
 let db;
 
 export const autorDB = {
 
-	init() {
+	async init() {
 		db = getDB();
-	},
-
-	async create(nombre) {
-		nombre = this.normalizeNombre(nombre);
-		const autor = await db.collection(collName).insertOne({ nombre });
-		return autor;
+		const collection = db.collection(collName)
+		let anon = await collection.findOne({ nombre: 'anonimo' });
+		if (!anon)
+			await collection.findOne({ nombre: 'anonimo', system: true })
 	},
 
 	async createMany(nombres, session) {
 		const docs = nombres.map(n => ({
-			nombre: this.normalizeNombre(n)
+			nombre: normalizeString(n)
 		}));
 
 		return await db.collection(collName).insertMany(docs, { session });
@@ -39,7 +38,7 @@ export const autorDB = {
 
 	async getManyByNombre(nombres, session) {
 		const nombresNormalizados = nombres.map(n =>
-			this.normalizeNombre(n)
+			normalizeString(n)
 		);
 
 		const autores = await db.collection(collName)
@@ -49,12 +48,49 @@ export const autorDB = {
 		return autores;
 	},
 
-	async remove(id) {
-		const result = await db.collection(collName).deleteOne({ _id: id });
-		return result;
-	},
+	async deleteFromLibro(autor_id, libro_id) {
+		const client = getClient();
+		const session = client.startSession();
 
-	normalizeNombre(n) {
-		return String(n).trim().replace(/\s+/g, " ").toLowerCase();
+		try {
+			await session.withTransaction(async () => {
+
+				const autoreadb = db.collection('autorea');
+				const autordb = db.collection('autor');
+
+				/* 
+				 * Se asume que la existencia del libro y autor está comprobada
+				 * Así como que el controlador valida que el autor no es protegido
+				 * por el sistema (por ejemplo, no anonimo)
+				 */
+
+				//Eliminar la relación
+				await autoreadb.deleteOne({ libro_id, autor_id }, { session })
+
+				//Si el libro ya no tiene autor, relacionarlo con el autor anónimo del sistema
+				const tieneAutor = await autoreadb.findOne({ libro_id }, { session });
+				if (!tieneAutor) {
+					const anonimo = await autordb.findOne(
+						{ nombre: 'anonimo', system: true },
+						{ session }
+					);
+					await autoreadb.insertOne(
+						{ libro_id, autor_id: anonimo._id },
+						{ session }
+					);
+				}
+
+				//Si el autor ya no tiene más libros, eliminarlo de su tabla
+				const sigueAutoreando = await autoreadb.findOne({ autor_id }, { session });
+				if (!sigueAutoreando)
+					await autordb.deleteOne({ _id: autor_id }, { session })
+
+			})
+		} catch (err) {
+			throw err;
+		} finally {
+			await session.endSession();
+		}
 	}
+
 }

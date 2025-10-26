@@ -1,5 +1,5 @@
 export function errorHandler(err, req, res, next) {
-	if (err.status === 500)
+	if (err.status === 500 || !err.status)
 		console.error(err)
 
 	if (err.code === 11000)

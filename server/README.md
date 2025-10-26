@@ -1,7 +1,5 @@
 # MongoDB CRUD – Biblioteca
 
----
-
 ## Requisitos
 
 - **Node.js** v25.0.0 o superior  

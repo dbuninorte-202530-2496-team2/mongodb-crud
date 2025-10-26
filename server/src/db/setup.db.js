@@ -55,9 +55,9 @@ export function getClient() {
 	return client;
 }
 
-export function initDB() {
+export async function initDB() {
 	libroDB.init();
-	autorDB.init();
+	await autorDB.init();
 	autoreaDB.init();
 	edicionDB.init();
 	copiaDB.init();
