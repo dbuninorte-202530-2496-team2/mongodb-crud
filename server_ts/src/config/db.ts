@@ -1,5 +1,6 @@
 import { Db, MongoClient } from "mongodb";
 import { libroDB } from "../db/libro.db";
+import { autorDB } from "../db/autor.db";
 
 let client: MongoClient | null;
 let db: Db | null;
@@ -50,4 +51,8 @@ export function getClient() {
 		throw new Error("Se intentó acceder al client antes de conectarlo.");
 	}
 	return client;
+}
+
+export async function initDB() {
+	await autorDB.init();
 }

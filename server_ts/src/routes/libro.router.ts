@@ -9,7 +9,7 @@ import { PaginationDto, ObjectIdDto, DetalleLibroDto, UpdateLibroDto} from '../d
 
 export const libroRouter = Router();
 
-// GET /libros
+
 libroRouter.get(
   '/',
   validationMiddleware(PaginationDto, 'query'),
@@ -38,7 +38,7 @@ libroRouter.get(
   async (req: TypedRequest<ObjectIdDto>, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const libro = await libroDB.getOneById(new ObjectId(id));
+      const libro = await libroDB.getDetalleById(new ObjectId(id));
 
       if (!libro) {
         return next(createError(404, `Libro con id ${id} no encontrado`));
@@ -54,9 +54,8 @@ libroRouter.get(
 libroRouter.post(
   '/',
   validationMiddleware(DetalleLibroDto, 'body'),
-  async (req: TypedRequest<{}, DetalleLibroDto>, res: Response, next: NextFunction) => {
+  async (req: TypedRequest<any, DetalleLibroDto>, res: Response, next: NextFunction) => {
     try {
-      const { titulo, autores } = req.body;
       const insertedIds = await libroDB.createFromDetalleLibro(req.body);
 
       res.status(201).json(insertedIds);
