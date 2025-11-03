@@ -6,7 +6,7 @@ interface UsersProps {
   onNavigate: (page: string, data?: any) => void;
 }
 
-export function Users({ onNavigate }: UsersProps) {
+export function UsersPage({ onNavigate }: UsersProps) {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
