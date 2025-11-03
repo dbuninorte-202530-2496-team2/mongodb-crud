@@ -54,7 +54,6 @@ const startServer = async () => {
 		await connectDB();
 		await initDB();
 		console.log('Base de datos lista.');
-		await connectDB();
 
 		server = app.listen(PORT, () => {
 			console.log(`Servidor escuchando en http://localhost:${PORT}/api`);

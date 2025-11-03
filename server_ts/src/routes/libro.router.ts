@@ -20,7 +20,7 @@ libroRouter.get(
     try {
       const typedReq = req as RequestWithValidatedQuery<PaginationDto>;
       const { limit = 10, offset = 0 } = typedReq.validatedQuery;
-      const libros = await libroDB.getMany({ limit, offset });
+      const libros = await libroDB.getManyDetalle({ limit, offset });
 
       res.json({
         data: libros,
@@ -43,7 +43,7 @@ libroRouter.get(
     try {
       const typedReq = req as RequestWithValidatedParams<ObjectIdDto>;
       const { id } = typedReq.validatedParams;
-      const libro = await libroDB.getOneById(new ObjectId(id));
+      const libro = await libroDB.getDetalleById(new ObjectId(id));
 
       if (!libro) {
         return next(createError(404, `Libro con id ${id} no encontrado`));

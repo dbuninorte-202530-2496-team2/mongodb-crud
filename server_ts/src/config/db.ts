@@ -1,7 +1,5 @@
 import { Db, MongoClient } from "mongodb";
-import { libroDB } from "../db/libro.db";
 import { autorDB } from "../db/autor.db";
-import { initializeCollections } from "./InitCollections";
 
 let client: MongoClient | null;
 let db: Db | null;
@@ -10,12 +8,7 @@ export const connectDB = async (): Promise<Db> => {
 	if (db) return db;
 
 	try {
-		client = new MongoClient(process.env.MONGO_URI || '', {
-			serverSelectionTimeoutMS: 10000,
-			connectTimeoutMS: 10000,
-			socketTimeoutMS: 10000,
-		});
-		
+		client = new MongoClient(process.env.MONGO_URI || 'mongodb://localhost:27017');
 		await client.connect();
 		db = client.db(process.env.DB_NAME);
 		
@@ -33,8 +26,6 @@ export const connectDB = async (): Promise<Db> => {
 				await db.createCollection(collectionName);
 			}
 		}
-
-		await initializeCollections(db);
 
 		return db;
 	} catch (error) {
