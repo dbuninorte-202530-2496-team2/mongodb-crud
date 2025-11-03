@@ -25,7 +25,7 @@ class ApiService {
     return response.data;
   }
 
-  async getLibro(id: number): Promise<Libro> {
+  async getLibro(id: string): Promise<Libro> {
     return this.fetchApi<Libro>(`/libros/${id}`);
   }
 
@@ -36,14 +36,14 @@ class ApiService {
     });
   }
 
-  async updateLibro(id: number, data: Partial<Libro>): Promise<Libro> {
+  async updateLibro(id: string, data: Partial<Libro>): Promise<Libro> {
     return this.fetchApi<Libro>(`/libros/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteLibro(id: number): Promise<void> {
+  async deleteLibro(id: string): Promise<void> {
     return this.fetchApi<void>(`/libros/${id}`, {
       method: 'DELETE',
     });
