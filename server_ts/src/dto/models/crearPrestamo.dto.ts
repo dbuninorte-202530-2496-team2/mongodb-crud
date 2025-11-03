@@ -1,22 +1,19 @@
-import { IsString, IsNotEmpty, IsDateString, Matches, IsNumber } from "class-validator";
+import { IsNotEmpty, IsDateString, IsOptional, IsString } from "class-validator";
 
 export class CreatePrestamoDto {
     @IsString()
-    @IsNotEmpty()
-    @Matches(/^\d{7,8}-[\dkK]$/, {
-        message: 'RUT debe tener formato válido (ej: 12345678-9)'
-    })
-    rut!: string;
+    @IsNotEmpty({ message: "El ID del usuario es requerido" })
+    usuario_id!: string;
 
-    @IsNumber()
-    @IsNotEmpty({ message: "El numero de la copia es requerido" })
-    numero_copia!: number;
+    @IsString()
+    @IsNotEmpty({ message: "El ID de la copia es requerido" })
+    copia_id!: string;
 
     @IsDateString()
     @IsNotEmpty({ message: "La fecha de préstamo es requerida" })
     fecha_prestamo!: string;
 
     @IsDateString()
-    @IsNotEmpty({ message: "La fecha de devolución es requerida" })
-    fecha_devolucion!: string;
+    @IsOptional()
+    fecha_devolucion?: string;
 }

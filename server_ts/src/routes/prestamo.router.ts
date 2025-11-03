@@ -16,6 +16,9 @@ export const prestamoRouter = Router();
 const COLLECTION_NAME_USUARIO = 'usuario';
 const COLLECTION_NAME_COPIA = 'copia';
 
+/**
+ * EP to get all prestamos with pagination
+ */
 prestamoRouter.get(
     '/',
     validationMiddleware(PaginationDto, 'query'),
@@ -23,11 +26,11 @@ prestamoRouter.get(
         try {
             const typedReq = req as RequestWithValidatedQuery<PaginationDto>;
             const { limit = 10, offset = 0 } = typedReq.validatedQuery;
-            const usuarios = await prestamoDB.getMany({ limit, offset });
+            const prestamos = await prestamoDB.getMany({ limit, offset });
 
             res.json({
-                data: usuarios,
-                pagination: { limit, offset, count: usuarios.length },
+                data: prestamos,
+                pagination: { limit, offset, count: prestamos.length },
             });
         } catch (error) {
             next(error);
@@ -35,10 +38,8 @@ prestamoRouter.get(
     }
 );
 
-
 /**
- * EP to get a usuario by id
- * This EP receives the usuario id as param
+ * EP to get a prestamo by id
  */
 prestamoRouter.get(
     '/:id',
@@ -47,23 +48,21 @@ prestamoRouter.get(
         try {
             const typedReq = req as RequestWithValidatedParams<ObjectIdDto>;
             const { id } = typedReq.validatedParams;
-            const usuario = await prestamoDB.getOneById(new ObjectId(id));
+            const prestamo = await prestamoDB.getOneById(new ObjectId(id));
 
-            if (!usuario) {
+            if (!prestamo) {
                 return next(createError(404, `Prestamo con id ${id} no encontrado`));
             }
 
-            res.json(usuario);
+            res.json(prestamo);
         } catch (error) {
             next(error);
         }
     }
 );
 
-
 /**
  * EP to create a new prestamo
- * This EP receives usuario_id, copia_id, fecha_prestamo and fecha_devolucion in the body
  */
 prestamoRouter.post(
     '/',
@@ -71,34 +70,47 @@ prestamoRouter.post(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const typedReq = req as RequestWithValidatedBody<CreatePrestamoDto>;
-            const { rut, numero_copia, fecha_prestamo, fecha_devolucion } = typedReq.validatedBody;
+            const { usuario_id, copia_id, fecha_prestamo, fecha_devolucion } = typedReq.validatedBody;
 
-
-            // Verificar si existe el usuario con ese RUT
             const db = getDB();
+            
+            // Verificar si existe el usuario
             const usuario_encontrado = await db.collection<UsuarioDoc>(COLLECTION_NAME_USUARIO)
-                .findOne({ rut });
+                .findOne({ _id: new ObjectId(usuario_id) });
 
             if (!usuario_encontrado)
-                throw new Error('NO existe este usuario con ese id');
+                return next(createError(404, 'No existe un usuario con ese ID'));
 
-            // Verificar si existe esa copia
+            // Verificar si existe la copia
             const copia_encontrada = await db.collection<CopiaDoc>(COLLECTION_NAME_COPIA)
-                .findOne({ numero_copia });
+                .findOne({ _id: new ObjectId(copia_id) });
+            
             if (!copia_encontrada)
-                throw new Error('NO existe este numero de copia');
+                return next(createError(404, 'No existe una copia con ese ID'));
 
-            // Crear el préstamo con referencias a usuario y copia
-            const nuevoPrestamo = {
-                usuario_id: new ObjectId(usuario_encontrado._id),
-                copia_id: new ObjectId(copia_encontrada._id),
+            // Verificar si la copia ya está prestada
+            const prestamoActivo = await db.collection<PrestamoDoc>('prestamo')
+                .findOne({ 
+                    copia_id: new ObjectId(copia_id),
+                    fecha_devolucion: { $exists: false }
+                });
+
+            if (prestamoActivo)
+                return next(createError(400, 'Esta copia ya está prestada'));
+
+            // Crear el préstamo
+            const nuevoPrestamo: Omit<PrestamoDoc, '_id'> = {
+                usuario_id: new ObjectId(usuario_id),
+                copia_id: new ObjectId(copia_id),
                 fecha_prestamo: new Date(fecha_prestamo),
-                fecha_devolucion: new Date(fecha_devolucion)
             };
+
+            if (fecha_devolucion) {
+                nuevoPrestamo.fecha_devolucion = new Date(fecha_devolucion);
+            }
 
             const prestamoId = await prestamoDB.create(nuevoPrestamo);
             const prestamoCreado = await prestamoDB.getOneById(prestamoId);
-
 
             res.status(201).json(prestamoCreado);
         } catch (error) {
@@ -109,7 +121,7 @@ prestamoRouter.post(
 
 /**
  * EP to update a prestamo by id
- * This EP receives the prestamo id as param and the data to update in the body
+ * SOLO permite actualizar fechas
  */
 prestamoRouter.patch(
     '/:id',
@@ -119,7 +131,7 @@ prestamoRouter.patch(
         try {
             const typedReq = req as RequestWithValidatedParams<ObjectIdDto> & RequestWithValidatedBody<UpdatePrestamoDto>;
             const { id } = typedReq.validatedParams;
-            const { rut, numero_copia, fecha_prestamo, fecha_devolucion } = typedReq.validatedBody;
+            const { fecha_prestamo, fecha_devolucion } = typedReq.validatedBody;
 
             // Verificar que el préstamo existe
             const prestamoExistente = await prestamoDB.getOneById(new ObjectId(id));
@@ -127,32 +139,9 @@ prestamoRouter.patch(
                 return next(createError(404, `Prestamo con id ${id} no encontrado`));
             }
 
-            const db = getDB();
-            const prestamoActualizado: Partial<Omit<PrestamoDoc, '_id'>> = {};
+            const prestamoActualizado: Partial<Omit<PrestamoDoc, '_id' | 'usuario_id' | 'copia_id'>> = {};
 
-            // Si se proporciona un nuevo RUT, buscar el usuario
-            if (rut) {
-                const usuario_encontrado = await db.collection<UsuarioDoc>(COLLECTION_NAME_USUARIO)
-                    .findOne({ rut });
-
-                if (!usuario_encontrado) {
-                    return next(createError(404, 'No existe un usuario con ese RUT'));
-                }
-                prestamoActualizado.usuario_id = new ObjectId(usuario_encontrado._id);
-            }
-
-            // Si se proporciona un nuevo número de copia, buscar la copia
-            if (numero_copia) {
-                const copia_encontrada = await db.collection<CopiaDoc>(COLLECTION_NAME_COPIA)
-                    .findOne({ numero_copia });
-
-                if (!copia_encontrada) {
-                    return next(createError(404, 'No existe una copia con ese número'));
-                }
-                prestamoActualizado.copia_id = new ObjectId(copia_encontrada._id);
-            }
-
-            // Actualizar fechas si se proporcionan
+            // Solo actualizar fechas
             if (fecha_prestamo) {
                 prestamoActualizado.fecha_prestamo = new Date(fecha_prestamo);
             }
@@ -182,7 +171,6 @@ prestamoRouter.patch(
 
 /**
  * EP to delete a prestamo by id
- * This EP receives the prestamo id as param
  */
 prestamoRouter.delete(
     '/:id',

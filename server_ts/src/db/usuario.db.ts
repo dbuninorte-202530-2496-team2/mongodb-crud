@@ -7,13 +7,13 @@ const COLLECTION_NAME = 'usuario';
 
 export interface UsuarioDoc {
     _id?: ObjectId;
-    rut: string;
+    RUT: string;
     nombre: string;
 }
 
 interface UsuarioConPrestamosResponse {
     _id: ObjectId;
-    rut: string;
+    RUT: string;
     nombre: string;
     prestamos: Array<{
         _id: ObjectId;
@@ -37,12 +37,12 @@ interface UsuarioConPrestamosResponse {
 }
 
 export const usuarioDB = {
-    async create(rut: string, nombre: string): Promise<ObjectId> {
+    async create(RUT: string, nombre: string): Promise<ObjectId> {
         const db = getDB();
 
         // Verificar si ya existe el usuario con ese RUT
         const existente = await db.collection<UsuarioDoc>(COLLECTION_NAME)
-            .findOne({ rut });
+            .findOne({ RUT });
 
         if (existente)
             throw new Error('Ya existe un usuario con ese RUT');
@@ -50,7 +50,7 @@ export const usuarioDB = {
 
         const result = await db.collection<UsuarioDoc>(COLLECTION_NAME)
             .insertOne({
-                rut,
+                RUT,
                 nombre: normalizeString(nombre)
             });
 
@@ -74,10 +74,10 @@ export const usuarioDB = {
             .findOne({ _id: id });
     },
 
-    async getOneByRut(rut: string): Promise<UsuarioDoc | null> {
+    async getOneByRUT(RUT: string): Promise<UsuarioDoc | null> {
         const db = getDB();
         return await db.collection<UsuarioDoc>(COLLECTION_NAME)
-            .findOne({ rut });
+            .findOne({ RUT });
     },
 
     async getUsuarioConPrestamos(usuario_id: ObjectId): Promise<UsuarioConPrestamosResponse | null> {
@@ -154,7 +154,7 @@ export const usuarioDB = {
                 {
                     $group: {
                         _id: '$_id',
-                        rut: { $first: '$rut' },
+                        RUT: { $first: '$RUT' },
                         nombre: { $first: '$nombre' },
                         prestamos: {
                             $push: {
@@ -188,7 +188,7 @@ export const usuarioDB = {
 
                 {
                     $project: {
-                        rut: 1,
+                        RUT: 1,
                         nombre: 1,
                         prestamos: 1
                     }

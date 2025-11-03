@@ -89,13 +89,13 @@ usuarioRouter.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const typedReq = req as RequestWithValidatedBody<CreateUsuarioDto>;
-      const { rut, nombre } = typedReq.validatedBody;
+      const { RUT, nombre } = typedReq.validatedBody;
       
-      const insertedId = await usuarioDB.create(rut, nombre);
+      const insertedId = await usuarioDB.create(RUT, nombre);
 
       res.status(201).json({ 
         _id: insertedId,
-        rut,
+        RUT,
         nombre 
       });
     } catch (error) {

@@ -10,8 +10,7 @@ export const connectDB = async (): Promise<Db> => {
 	if (db) return db;
 
 	try {
-		const uri = 'mongodb://localhost:27018/?directConnection=true';
-		client = new MongoClient(uri, {
+		client = new MongoClient(process.env.MONGO_URI || '', {
 			serverSelectionTimeoutMS: 10000,
 			connectTimeoutMS: 10000,
 			socketTimeoutMS: 10000,

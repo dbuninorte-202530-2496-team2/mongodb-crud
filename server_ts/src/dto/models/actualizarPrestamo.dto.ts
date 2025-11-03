@@ -1,14 +1,6 @@
-import { IsString, IsOptional, IsDateString } from "class-validator";
+import { IsDateString, IsOptional } from "class-validator";
 
 export class UpdatePrestamoDto {
-    @IsString()
-    @IsOptional()
-    rut?: string;
-
-    @IsString()
-    @IsOptional()
-    numero_copia?: number;
-
     @IsDateString()
     @IsOptional()
     fecha_prestamo?: string;

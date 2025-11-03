@@ -17,6 +17,6 @@ appRouter.use('/autores', autorRouter);
 appRouter.use('/ediciones', edicionRouter);
 appRouter.use('/copias', copiaRouter)
 appRouter.use('/usuarios', usuarioRouter);
-appRouter.use('/prestamo', prestamoRouter);
+appRouter.use('/prestamos', prestamoRouter);
 
 export default appRouter;

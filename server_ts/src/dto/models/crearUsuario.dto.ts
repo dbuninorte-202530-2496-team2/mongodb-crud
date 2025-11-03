@@ -7,7 +7,7 @@ export class CreateUsuarioDto {
   @Matches(/^\d{7,8}-[\dkK]$/, { 
     message: 'RUT debe tener formato válido (ej: 12345678-9)' 
   })
-  rut!: string;
+  RUT!: string;
 
   @IsString()
   @IsNotEmpty()

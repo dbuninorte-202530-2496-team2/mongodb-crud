@@ -36,7 +36,7 @@ const shutdown = async () => {
 	try {
 		if (server)
 			server.close(() => console.log('Servidor HTTP cerrado.'));
-		console.log('Conexión a Neo4j cerrada.');
+		console.log('Conexión a MongoDB cerrada.');
 		process.exit(0);
 	} catch (err) {
 		console.error('Error al apagar:', err);

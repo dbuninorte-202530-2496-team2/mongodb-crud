@@ -9,12 +9,10 @@ export interface PrestamoDoc {
     usuario_id: ObjectId;
     copia_id: ObjectId;
     fecha_prestamo: Date;
-    fecha_devolucion: Date;
+    fecha_devolucion?: Date;
 }
 
-
 export const prestamoDB = {
-
     async getMany(paginationDto: PaginationDto): Promise<PrestamoDoc[]> {
         const db = getDB();
         const { limit = 10, offset = 0 } = paginationDto;
@@ -39,7 +37,7 @@ export const prestamoDB = {
         return result.insertedId;
     },
 
-    async update(id: ObjectId, prestamo: Partial<Omit<PrestamoDoc, '_id'>>): Promise<boolean> {
+    async update(id: ObjectId, prestamo: Partial<Omit<PrestamoDoc, '_id' | 'usuario_id' | 'copia_id'>>): Promise<boolean> {
         const db = getDB();
         const result = await db.collection<PrestamoDoc>(COLLECTION_NAME)
             .updateOne(
@@ -55,6 +53,4 @@ export const prestamoDB = {
             .deleteOne({ _id: id });
         return result.deletedCount > 0;
     }
-
-
-}
+};
