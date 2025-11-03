@@ -1,6 +1,7 @@
 import { Book } from 'lucide-react';
 import { Libro } from '../api/types';
 import {formatAutores} from '../utils/stringFormatting.ts'
+import { capitalize } from '../utils/stringFormatting';
 
 interface BookCardProps {
     libro: Libro;
@@ -23,10 +24,10 @@ export function BookCard({ libro, onClick }: BookCardProps) {
                 </div>
                 <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-gray-900 truncate">
-                        {libro.titulo}
+                        {capitalize(libro.titulo)}
                     </h3>
                     <p className="text-sm text-gray-600 mt-1 truncate">
-                        {formatAutores(libro.autores)}`
+                        {formatAutores(libro.autores)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">Ediciones: {libro.ediciones.length}</p>
                     <div className="flex items-center gap-4 mt-3">

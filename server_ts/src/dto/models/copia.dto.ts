@@ -1,4 +1,4 @@
-import { IsInt, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsNumber, IsString, Matches, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class AddCopiasDto {
@@ -6,4 +6,8 @@ export class AddCopiasDto {
   @IsInt()
   @Min(1)
   cantidad!: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  numero_copia!: number;
 }

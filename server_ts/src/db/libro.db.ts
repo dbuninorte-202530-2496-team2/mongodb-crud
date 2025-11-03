@@ -143,18 +143,18 @@ export const libroDB = {
     } finally {
       await session.endSession();
     }
-  },
+    },
 
-  async getMany(paginationDto: PaginationDto): Promise<LibroDoc[]> {
-    const db = getDB();
-    const { limit = 10, offset = 0 } = paginationDto;
+    async getMany(paginationDto: PaginationDto): Promise<LibroDoc[]> {
+      const db = getDB();
+      const { limit = 10, offset = 0 } = paginationDto;
 
-    return await db.collection<LibroDoc>(COLLECTION_NAME)
-      .find({})
-      .limit(limit)
-      .skip(offset)
-      .toArray();
-  },
+      return await db.collection<LibroDoc>(COLLECTION_NAME)
+        .find({})
+        .limit(limit)
+        .skip(offset)
+        .toArray();
+    },
 
   async getOneById(id: ObjectId): Promise<LibroDoc | null> {
     const db = getDB();

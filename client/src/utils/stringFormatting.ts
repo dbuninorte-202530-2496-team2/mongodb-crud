@@ -1,7 +1,12 @@
 import { Autor } from '../api/types';
 export const capitalize = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  return str
+    .split(' ')
+    .filter(Boolean) // evita espacios dobles
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };
+
 
 export const formatAutores = (autores: Autor[], limit = 2) => {
   if (!autores || autores.length === 0) return 'Autor desconocido';
