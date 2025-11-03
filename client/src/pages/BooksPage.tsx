@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { BookOpen, Plus, Search, Users } from 'lucide-react';
-
 import { Libro } from '../api/types';
 import { BookCard } from '../components/BookCard';
 import { api } from '../api/api';
@@ -11,7 +10,6 @@ export default function BooksPage() {
     const [libros, setLibros] = useState<Libro[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -104,7 +102,7 @@ export default function BooksPage() {
                             <BookCard
                                 key={libro._id}
                                 libro={libro}
-                                onClick={() => navigate('book')}
+                                onClick={() => navigate(`/book/${(libro._id)}`)}
                             />
                         ))}
                     </div>
