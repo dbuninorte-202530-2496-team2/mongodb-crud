@@ -3,6 +3,7 @@ import { libroRouter } from './libro.router';
 import { autorRouter } from './autor.router';
 import { edicionRouter } from './edicion.router';
 import { copiaRouter } from './copia.router';
+import { usuarioRouter } from './usuario.router';
 
 const appRouter = express.Router();
 
@@ -14,5 +15,6 @@ appRouter.use('/libros', libroRouter);
 appRouter.use('/autores', autorRouter);
 appRouter.use('/ediciones', edicionRouter);
 appRouter.use('/copias', copiaRouter)
+appRouter.use('/usuarios', usuarioRouter);
 
 export default appRouter;

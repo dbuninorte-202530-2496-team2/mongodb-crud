@@ -3,10 +3,16 @@ import { plainToInstance } from 'class-transformer';
 import { validate, ValidationError } from 'class-validator';
 import createError from 'http-errors';
 import { ObjectId } from 'mongodb';
+import type { RequestWithValidatedBody, RequestWithValidatedParams, RequestWithValidatedQuery, ValidationType } from '../interfaces';
 
-type ValidationType = 'body' | 'query' | 'params';
 
-export function validationMiddleware(DtoClass: any, source: ValidationType = 'body') {
+/**
+ * 
+ * @param DtoClass 
+ * @param source 
+ * @returns 
+ */
+export function validationMiddleware(DtoClass: new () => Object, source: ValidationType = 'body') {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
 
@@ -23,16 +29,19 @@ export function validationMiddleware(DtoClass: any, source: ValidationType = 'bo
         return next(createError(400, messages.join(', ')));
       }
 
-      // Se reemplaza el dato de la request con la instancia validada
-      if (source === 'body') {
-        req.body = dtoInstance;
-      } else {
-        Object.defineProperty(req, source, {
-          value: dtoInstance,
-          writable: true,
-          configurable: true
-        });
+
+      switch (source) {
+        case 'body':
+          (req as RequestWithValidatedBody<typeof dtoInstance>).validatedBody = dtoInstance;
+          break;
+        case 'query':
+          (req as RequestWithValidatedQuery<typeof dtoInstance>).validatedQuery = dtoInstance;
+          break;
+        case 'params':
+          (req as RequestWithValidatedParams<typeof dtoInstance>).validatedParams = dtoInstance;
+          break;
       }
+
       next();
     } catch (error) {
       next(error);
@@ -40,6 +49,12 @@ export function validationMiddleware(DtoClass: any, source: ValidationType = 'bo
   };
 }
 
+/**
+ * 
+ * @param source 
+ * @param fields 
+ * @returns 
+ */
 export function validateObjectIds(
   source: ValidationType = 'params',
   ...fields: string[]
@@ -63,6 +78,12 @@ export function validateObjectIds(
   };
 }
 
+
+/**
+ * 
+ * @param errors 
+ * @returns 
+ */
 function extractErrorMessages(errors: ValidationError[]): string[] {
   const messages: string[] = [];
 
