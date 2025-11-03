@@ -5,6 +5,7 @@ import { Libro } from '../api/types';
 import { BookCard } from '../components/BookCard';
 import { api } from '../api/api';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 
 export default function BooksPage() {
@@ -22,10 +23,10 @@ export default function BooksPage() {
         try {
             setLoading(true);
             const data = await api.getLibros();
-            console.log(data)
             setLibros(data);
         } catch (error) {
-            console.error('Error loading books:', error);
+            toast.error('No se pudieron cargar los libros');
+            console.log('Error cargando libros: ', error)
         } finally {
             setLoading(false);
         }
@@ -78,7 +79,7 @@ export default function BooksPage() {
                             />
                         </div>
                         <button
-                            onClick={() => navigate('new-book')}
+                            onClick={() => navigate('create-book')}
                             className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
                         >
                             <Plus className="w-5 h-5" />

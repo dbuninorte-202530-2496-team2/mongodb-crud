@@ -1,3 +1,4 @@
+import { CreateDetalleLibroDto } from "../types/dto/libro.dto";
 import { Libro, Autor, Usuario, Prestamo, PaginatedResponse } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -20,15 +21,15 @@ class ApiService {
   }
 
   async getLibros(): Promise<Libro[]> {
-  const response = await this.fetchApi<PaginatedResponse<Libro>>('/libros');
-  return response.data;
-}
+    const response = await this.fetchApi<PaginatedResponse<Libro>>('/libros');
+    return response.data;
+  }
 
   async getLibro(id: number): Promise<Libro> {
     return this.fetchApi<Libro>(`/libros/${id}`);
   }
 
-  async createLibro(data: Omit<Libro, 'id'>): Promise<Libro> {
+  async createLibro(data: Omit<CreateDetalleLibroDto, 'id'>): Promise<any> {
     return this.fetchApi<Libro>('/libros', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -49,7 +50,8 @@ class ApiService {
   }
 
   async getAutores(): Promise<Autor[]> {
-    return this.fetchApi<Autor[]>('/autores');
+    const response = await this.fetchApi<PaginatedResponse<Autor>>('/autores');
+    return response.data.filter(a => a.nombre != 'anonimo');
   }
 
   async createAutor(data: Omit<Autor, 'id'>): Promise<Autor> {

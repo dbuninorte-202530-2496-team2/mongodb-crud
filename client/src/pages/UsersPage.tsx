@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Mail, MapPin, Phone, Plus, User } from 'lucide-react';
-import { api, Usuario } from '../services/api';
+import { Usuario } from '../api/types';
+import { api } from '../api/api';
 
 interface UsersProps {
   onNavigate: (page: string, data?: any) => void;
