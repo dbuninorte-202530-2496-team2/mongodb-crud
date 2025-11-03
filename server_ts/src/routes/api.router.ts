@@ -4,6 +4,7 @@ import { autorRouter } from './autor.router';
 import { edicionRouter } from './edicion.router';
 import { copiaRouter } from './copia.router';
 import { usuarioRouter } from './usuario.router';
+import { prestamoRouter } from './prestamo.router';
 
 const appRouter = express.Router();
 
@@ -16,5 +17,6 @@ appRouter.use('/autores', autorRouter);
 appRouter.use('/ediciones', edicionRouter);
 appRouter.use('/copias', copiaRouter)
 appRouter.use('/usuarios', usuarioRouter);
+appRouter.use('/prestamo', prestamoRouter);
 
 export default appRouter;

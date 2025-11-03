@@ -5,7 +5,7 @@ import { normalizeString } from '../utils/normalizeString';
 
 const COLLECTION_NAME = 'usuario';
 
-interface UsuarioDoc {
+export interface UsuarioDoc {
     _id?: ObjectId;
     rut: string;
     nombre: string;

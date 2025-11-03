@@ -4,7 +4,7 @@ import type { PaginationDto } from '../dto';
 
 const COLLECTION_NAME = 'copia';
 
-interface CopiaDoc {
+export interface CopiaDoc {
   _id?: ObjectId;
   edicion_id: ObjectId;
   numero_copia: number;
