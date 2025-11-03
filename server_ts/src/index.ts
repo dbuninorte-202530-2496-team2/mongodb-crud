@@ -2,15 +2,13 @@ import 'reflect-metadata';
 import express, { type Application } from "express";
 import cors from 'cors';
 import dotenv from 'dotenv';
-dotenv.config();
-
 import { connectDB, initDB } from "./config/db.js";
 import type { Server } from "http";
 import appRouter from "./routes/api.router.js";
 import createError from 'http-errors';
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
 
-//RELATIVO A LA APLICACIÓN EXPRESS
+dotenv.config();
 const app = express();
 
 app.use(cors({
@@ -18,8 +16,9 @@ app.use(cors({
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 	allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json());
 
+
+app.use(express.json());
 app.use('/api', appRouter);
 
 app.use(function(req, res, next) { next(createError(404)); });
@@ -37,7 +36,7 @@ const shutdown = async () => {
 	try {
 		if (server)
 			server.close(() => console.log('Servidor HTTP cerrado.'));
-		console.log('Conexión a Neo4j cerrada.');
+		console.log('Conexión a MongoDB cerrada.');
 		process.exit(0);
 	} catch (err) {
 		console.error('Error al apagar:', err);
@@ -56,7 +55,6 @@ const startServer = async () => {
 		await initDB();
 		console.log('Base de datos lista.');
 
-		// Solo ahora iniciamos el servidor
 		server = app.listen(PORT, () => {
 			console.log(`Servidor escuchando en http://localhost:${PORT}/api`);
 		});
