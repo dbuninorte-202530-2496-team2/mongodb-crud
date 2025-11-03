@@ -16,7 +16,7 @@ libroRouter.get(
   async (req: TypedRequest<any, any, PaginationDto>, res: Response, next: NextFunction) => {
     try {
       const { limit, offset } = req.query;
-      const libros = await libroDB.getMany(req.query);
+      const libros = await libroDB.getManyDetalle(req.query);
 
       res.json({
         data: libros,

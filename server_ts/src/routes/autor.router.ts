@@ -99,10 +99,6 @@ autorRouter.patch(
 
       const result = await autorDB.updateOne(autor_id, nombre);
 
-      if (result.matchedCount === 0) {
-        return next(createError(404, 'Autor no encontrado'));
-      }
-
       res.status(200).json({ ok: true, message: 'Nombre de autor actualizado' });
     } catch (error) {
       if (error instanceof MongoServerError && error.code === 11000) {

@@ -162,6 +162,98 @@ export const libroDB = {
       .findOne({ _id: id });
   },
 
+  async getManyDetalle(paginationDto: PaginationDto): Promise<LibroDetalleResponse[]> {
+    const db = getDB();
+    const { limit = 10, offset = 0 } = paginationDto;
+
+    return await db.collection(COLLECTION_NAME)
+      .aggregate<LibroDetalleResponse>([
+        { $skip: offset },
+        { $limit: limit },
+
+        {
+          $lookup: {
+            from: 'autorea',
+            localField: '_id',
+            foreignField: 'libro_id',
+            as: 'autorea_relations'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'autor',
+            localField: 'autorea_relations.autor_id',
+            foreignField: '_id',
+            as: 'autores'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'edicion',
+            localField: '_id',
+            foreignField: 'libro_id',
+            as: 'ediciones'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'copia',
+            localField: 'ediciones._id',
+            foreignField: 'edicion_id',
+            as: 'copias_temp'
+          }
+        },
+
+        {
+          $addFields: {
+            ediciones: {
+              $map: {
+                input: '$ediciones',
+                as: 'edicion',
+                in: {
+                  _id: '$$edicion._id',
+                  isbn: '$$edicion.isbn',
+                  idioma: '$$edicion.idioma',
+                  año: '$$edicion.año',
+                  copias: {
+                    $filter: {
+                      input: '$copias_temp',
+                      as: 'copia',
+                      cond: { $eq: ['$$copia.edicion_id', '$$edicion._id'] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        {
+          $project: {
+            titulo: 1,
+            autores: {
+              _id: 1,
+              nombre: 1
+            },
+            ediciones: {
+              _id: 1,
+              isbn: 1,
+              idioma: 1,
+              año: 1,
+              copias: {
+                _id: 1,
+                numero_copia: 1
+              }
+            }
+          }
+        }
+      ])
+      .toArray();
+  },
+
   async getDetalleById(id: ObjectId): Promise<LibroDetalleResponse | null> {
     const db = getDB();
 

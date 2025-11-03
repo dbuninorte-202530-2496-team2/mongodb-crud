@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, IsArray, ValidateNested, ArrayMinSize } from 'class-validator';
 import { Type } from 'class-transformer';
-import { EdicionDto } from './edicion.dto.js';
+import { CreateEdicionDto } from './edicion.dto.js';
 
 export class DetalleLibroDto {
   @IsString()
@@ -15,7 +15,7 @@ export class DetalleLibroDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => EdicionDto)
+  @Type(() => CreateEdicionDto)
   @ArrayMinSize(1)
-  ediciones!: EdicionDto[];
+  ediciones!: CreateEdicionDto[];
 }
