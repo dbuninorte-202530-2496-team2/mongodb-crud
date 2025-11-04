@@ -29,7 +29,7 @@ class ApiService {
 
   // Libros
   async getLibros(): Promise<Libro[]> {
-    const response = await this.fetchApi<PaginatedResponse<Libro>>('/libros');
+    const response = await this.fetchApi<PaginatedResponse<Libro>>('/libros?limit=1000');
     return response.data;
   }
 

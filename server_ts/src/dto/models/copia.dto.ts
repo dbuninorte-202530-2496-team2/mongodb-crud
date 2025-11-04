@@ -6,8 +6,4 @@ export class AddCopiasDto {
   @IsInt()
   @Min(1)
   cantidad!: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  numero_copia!: number;
 }

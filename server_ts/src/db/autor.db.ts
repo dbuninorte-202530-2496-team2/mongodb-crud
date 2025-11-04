@@ -51,6 +51,15 @@ export const autorDB = {
           autor_id = result.insertedId;
         }
 
+        const anonimo = await db.collection<AutorDoc>(COLLECTION_NAME)
+          .findOne({ nombre: 'anonimo' });
+        if (anonimo) {
+          await db.collection<AutoreaDoc>('autorea').deleteOne(
+            { libro_id, autor_id: anonimo._id },
+            { session }
+          );
+        }
+
         // 3. Crear relación autorea
         await db.collection<AutoreaDoc>('autorea')
           .insertOne({ libro_id, autor_id }, { session });
@@ -147,11 +156,11 @@ export const autorDB = {
           if (!anonimo) {
             throw new Error('FATAL: autor anónimo del sistema no encontrado')
           }
-            await autoreadb.insertOne(
-              { libro_id, autor_id: anonimo._id! },
-              { session }
-            );
-          
+          await autoreadb.insertOne(
+            { libro_id, autor_id: anonimo._id! },
+            { session }
+          );
+
         }
 
         // Si el autor ya no tiene más libros, eliminarlo de su tabla
