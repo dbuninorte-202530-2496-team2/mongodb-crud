@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, Plus, Search, Users } from 'lucide-react';
+import { BookOpen, Plus, Search, Users, BookCopy} from 'lucide-react';
 import { Libro } from '../api/types';
 import { BookCard } from '../components/BookCard';
 import { api } from '../api/api';
@@ -52,13 +52,22 @@ export default function BooksPage() {
                                 <p className="text-sm text-gray-600">Gestión de libros y préstamos</p>
                             </div>
                         </div>
-                        <button
-                            onClick={() => navigate('users')}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                        >
-                            <Users className="w-5 h-5" />
-                            <span>Usuarios</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => navigate('users')}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                            >
+                                <Users className="w-5 h-5" />
+                                <span>Usuarios</span>
+                            </button>
+                            <button
+                                onClick={() => navigate('copias')}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                            >
+                                <BookCopy className="w-5 h-5" />
+                                <span>Copias</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>

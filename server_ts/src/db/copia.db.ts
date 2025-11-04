@@ -161,7 +161,7 @@ export const copiaDB = {
     }
   },
 
-  async getManyConDetalle(paginationDto: PaginationDto): Promise<CopiaDetalleResponse[]> {
+async getManyConDetalle(paginationDto: PaginationDto): Promise<CopiaDetalleResponse[]> {
     const db = getDB();
     const { limit = 10, offset = 0 } = paginationDto;
 
@@ -206,10 +206,10 @@ export const copiaDB = {
         // Lookup autores del libro
         {
           $lookup: {
-            from: 'libro_autor',
+            from: 'autorea',
             localField: 'libro_temp._id',
             foreignField: 'libro_id',
-            as: 'libro_autores_temp'
+            as: 'autorea_temp'
           }
         },
 
@@ -217,7 +217,7 @@ export const copiaDB = {
         {
           $lookup: {
             from: 'autor',
-            localField: 'libro_autores_temp.autor_id',
+            localField: 'autorea_temp.autor_id',
             foreignField: '_id',
             as: 'autores_temp'
           }

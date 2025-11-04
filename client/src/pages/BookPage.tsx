@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Book, Calendar, Package, User } from 'lucide-react';
+import { ArrowLeft, Book} from 'lucide-react';
 import {api} from '../api/api';
 import { EditableField } from '../components/EditableField';
 import { Libro } from '../api/types';
 import { useParams } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
-import { AutoresEditor } from '../components/AutoresEditor';
-import { EdicionesEditor } from '../components/EdicionEditor';
+import { AutoresEditor } from '../components/autor/AutoresEditor';
+import { EdicionesEditor } from '../components/edicion/EdicionEditor';
 
 export function BookPage() {
   const [libro, setLibro] = useState<Libro | null>(null);

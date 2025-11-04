@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Edit2, X, Plus, Trash2, User, BookOpen, Check, Loader2 } from 'lucide-react';
-import { Edicion } from '../api/types';
+import { Edicion } from '../../api/types';
 
 
 interface EdicionesEditorProps {

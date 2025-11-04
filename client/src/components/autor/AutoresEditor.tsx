@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Edit2, X, Plus, Trash2, User, BookOpen, Check, Loader2 } from 'lucide-react';
-import { Autor } from '../api/types';
+import { Autor } from '../../api/types';
 
 interface AutoresEditorProps {
   autores: Autor[];

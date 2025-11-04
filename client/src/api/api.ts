@@ -1,4 +1,5 @@
 import { CreateDetalleLibroDto } from "../types/dto/libro.dto";
+import { CreatePrestamoDTO } from "../types/dto/prestamo.dto";
 import { Libro, Autor, Usuario, Prestamo, PaginatedResponse, PrestamoDetalle, CopiaDetalle } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -118,7 +119,7 @@ class ApiService {
   }
 
   // Prestamos
-  async createPrestamo(data: Omit<Prestamo, 'id' | 'fechaPrestamo' | 'estado'>): Promise<Prestamo> {
+  async createPrestamo(data: CreatePrestamoDTO): Promise<Prestamo> {
     return this.fetchApi<Prestamo>('/prestamos', {
       method: 'POST',
       body: JSON.stringify(data),
