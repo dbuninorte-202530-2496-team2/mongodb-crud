@@ -34,15 +34,15 @@ export interface Libro {
 }
 
 export interface Usuario {
-  _id: number;
+  _id: string;
   RUT: string;
   nombre: string;
 }
 
 export interface Prestamo {
-  _id: number;
-  copia_id: number;
-  usuario_id: number;
+  _id: string;
+  copia_id: string;
+  usuario_id: string;
   fecha_prestamo: Date;
   fecha_devolucion: Date;
 }

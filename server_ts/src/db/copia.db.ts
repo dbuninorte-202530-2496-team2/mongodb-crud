@@ -161,7 +161,7 @@ export const copiaDB = {
     }
   },
 
-  async getManyConDetalle(paginationDto: PaginationDto): Promise<CopiaDetalleResponse[]> {
+async getManyConDetalle(paginationDto: PaginationDto): Promise<CopiaDetalleResponse[]> {
     const db = getDB();
     const { limit = 10, offset = 0 } = paginationDto;
 

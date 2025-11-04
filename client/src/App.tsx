@@ -6,6 +6,7 @@ import { CreateBookPage } from './pages/CreateBookPage'
         import { BookPage } from './pages/BookPage'
 import { UsersPage } from './pages/UsersPage';
 import UserDetailPage from './pages/UserDetailPage';
+import { CopiasPage } from './pages/CopiasPage';
 
 function Layout() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path='book/:id' element={<BookPage/>} /> 
         <Route path='users' element={<UsersPage/>}/>
         <Route path='user/:id' element={<UserDetailPage/>}/>
+        <Route path='copias' element={<CopiasPage/>}/>
       </Route>
     )
   )
