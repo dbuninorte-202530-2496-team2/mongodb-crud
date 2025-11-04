@@ -20,7 +20,7 @@ export function CreateBookPage() {
     const [edicionData, setEdicionData] = useState<CreateEdicionDto>({
         isbn: '',
         idioma: 'español',
-        año: new Date().getFullYear(),
+        año: `${new Date().getFullYear()}`,
         numCopias: 1
     });
 

@@ -20,7 +20,7 @@ interface CopiaDoc {
 
 export const edicionDB = {
   async createMany(
-    docs: EdicionDoc[], 
+    docs: EdicionDoc[],
     session?: ClientSession
   ): Promise<InsertManyResult<EdicionDoc>> {
     const db = getDB();
@@ -40,7 +40,7 @@ export const edicionDB = {
       return await session.withTransaction(async () => {
         // 1. Crear edición
         const edicionResult = await db.collection<EdicionDoc>(COLLECTION_NAME)
-          .insertOne(edicionData, { session });
+          .insertOne({ ...edicionData, año: new Date(edicionData.año) }, { session });
 
         const edicion_id = edicionResult.insertedId;
 
@@ -66,7 +66,7 @@ export const edicionDB = {
   async getMany(paginationDto: PaginationDto): Promise<EdicionDoc[]> {
     const db = getDB();
     const { limit = 10, offset = 0 } = paginationDto;
-    
+
     return await db.collection<EdicionDoc>(COLLECTION_NAME)
       .find({})
       .limit(limit)
@@ -85,8 +85,16 @@ export const edicionDB = {
     updates: Partial<Pick<EdicionDoc, 'isbn' | 'año' | 'idioma'>>
   ): Promise<UpdateResult> {
     const db = getDB();
+
+    const fixedUpdates = { ...updates };
+    if (fixedUpdates.año) {
+      if (typeof fixedUpdates.año === 'string') {
+        fixedUpdates.año = new Date(fixedUpdates.año);
+      }
+    }
+
     return await db.collection<EdicionDoc>(COLLECTION_NAME)
-      .updateOne({ _id: id }, { $set: updates });
+      .updateOne({ _id: id }, { $set: fixedUpdates });
   },
 
   async isLastEdicionOfLibro(libro_id: ObjectId): Promise<boolean> {

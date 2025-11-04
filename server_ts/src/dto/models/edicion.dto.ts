@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsInt, Min, IsDate, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, Min, IsDate, IsOptional, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateEdicionDto {
@@ -6,8 +6,8 @@ export class CreateEdicionDto {
   @IsNotEmpty()
   isbn!: string;
 
-  @Type(() => Date)
-  @IsDate()         
+  @IsDateString()
+  @IsNotEmpty()         
   año!: Date;
 
   @IsString()
@@ -27,9 +27,8 @@ export class UpdateEdicionDto {
   isbn?: string;
 
   @IsOptional()
-  @Type(() => Date)
-  @IsDate()         
-  año?: Date;
+  @IsDateString()       
+  año!: Date;
 
   @IsOptional()
   @IsString()

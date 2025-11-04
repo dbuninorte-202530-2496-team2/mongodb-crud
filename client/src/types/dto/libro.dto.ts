@@ -5,3 +5,7 @@ export interface CreateDetalleLibroDto {
       autores: string[];
       ediciones: CreateEdicionDto[];
 }
+
+export interface UpdateLibroDto {
+  titulo?: string;
+}

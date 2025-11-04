@@ -10,18 +10,34 @@ export function errorHandler(
   console.log(err)
 
   if (err instanceof MongoServerError) {
-    const status = err.code === 11000 ? 400 : 500;
-    
-    if (status === 500) {
-      console.error(err);
+    const status = 400;
+    let message = err.message || 'Database error';
+
+    // Si es fallo de validación (121), extraemos detalles
+    if (err.code === 121 && err.errInfo?.details) {
+      const schemaDetails = err.errInfo.details.schemaRulesNotSatisfied || [];
+      const fieldErrors: string[] = [];
+
+      for (const rule of schemaDetails) {
+        if (rule.propertiesNotSatisfied) {
+          for (const prop of rule.propertiesNotSatisfied) {
+            const propName = prop.propertyName;
+            const reason = prop.details?.[0]?.reason || 'unknown reason';
+            fieldErrors.push(`${propName}: ${reason}`);
+          }
+        }
+      }
+
+      if (fieldErrors.length > 0) {
+        message = `Validation failed: ${fieldErrors.join(', ')}`;
+      }
     }
-    
-    res.status(status).json({
+
+    return res.status(status).json({
       status,
-      message: err.message || 'Database error',
-      code: err.code
+      message,
+      code: err.code,
     });
-    return;
   }
   
   if (err instanceof Error) {
