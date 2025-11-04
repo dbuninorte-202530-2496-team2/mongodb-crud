@@ -11,7 +11,6 @@ interface BookCardProps {
 export function BookCard({ libro, onClick }: BookCardProps) {
     const allCopias = libro.ediciones?.flatMap(e => e.copias) || [];
     const total = allCopias.length;
-    const disponibles = total;
 
     return (
         <div
@@ -29,13 +28,10 @@ export function BookCard({ libro, onClick }: BookCardProps) {
                     <p className="text-sm text-gray-600 mt-1 truncate">
                         {formatAutores(libro.autores)}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">Ediciones: {libro.ediciones.length}</p>
+                    <p className="text-sm text-gray-600 mt-1">Ediciones: {libro.ediciones.length}</p>
                     <div className="flex items-center gap-4 mt-3">
-                        <span className="text-sm text-gray-700">
-                            {libro.ediciones?.length || 0} edición(es)
-                        </span>
-                        <span className={`text-sm font-medium ${disponibles > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {disponibles}/{total} disponibles
+                        <span className={`text-sm font-medium ${'text-green-600'}`}>
+                            {total} copias
                         </span>
                     </div>
                 </div>

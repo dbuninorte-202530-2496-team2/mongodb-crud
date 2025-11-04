@@ -10,6 +10,26 @@ export interface CopiaDoc {
   numero_copia: number;
 }
 
+interface CopiaDetalleResponse {
+  _id: ObjectId;
+  numero_copia: number;
+  edicion: {
+    _id: ObjectId;
+    isbn: string;
+    idioma: string;
+    año: Date;
+    libro: {
+      _id: ObjectId;
+      titulo: string;
+      autores: Array<{
+        _id: ObjectId;
+        nombre: string;
+      }>;
+    };
+  };
+  prestamos_activos: number;
+}
+
 export const copiaDB = {
   async createMany(
     docs: CopiaDoc[], 
@@ -139,5 +159,113 @@ export const copiaDB = {
     } finally {
       await session.endSession();
     }
-  }
+  },
+
+  async getManyConDetalle(paginationDto: PaginationDto): Promise<CopiaDetalleResponse[]> {
+    const db = getDB();
+    const { limit = 10, offset = 0 } = paginationDto;
+
+    return await db.collection(COLLECTION_NAME)
+      .aggregate<CopiaDetalleResponse>([
+        // Paginación
+        { $skip: offset },
+        { $limit: limit },
+
+        // Lookup edición
+        {
+          $lookup: {
+            from: 'edicion',
+            localField: 'edicion_id',
+            foreignField: '_id',
+            as: 'edicion_temp'
+          }
+        },
+        {
+          $unwind: {
+            path: '$edicion_temp',
+            preserveNullAndEmptyArrays: false
+          }
+        },
+
+        // Lookup libro
+        {
+          $lookup: {
+            from: 'libro',
+            localField: 'edicion_temp.libro_id',
+            foreignField: '_id',
+            as: 'libro_temp'
+          }
+        },
+        {
+          $unwind: {
+            path: '$libro_temp',
+            preserveNullAndEmptyArrays: false
+          }
+        },
+
+        // Lookup autores del libro
+        {
+          $lookup: {
+            from: 'libro_autor',
+            localField: 'libro_temp._id',
+            foreignField: 'libro_id',
+            as: 'libro_autores_temp'
+          }
+        },
+
+        // Lookup datos completos de autores
+        {
+          $lookup: {
+            from: 'autor',
+            localField: 'libro_autores_temp.autor_id',
+            foreignField: '_id',
+            as: 'autores_temp'
+          }
+        },
+
+        // Lookup préstamos activos (sin fecha de devolución)
+        {
+          $lookup: {
+            from: 'prestamo',
+            let: { copia_id: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$copia_id', '$$copia_id'] },
+                      { $not: { $gt: ['$fecha_devolucion', null] } }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'prestamos_activos_temp'
+          }
+        },
+
+        // Proyección final
+        {
+          $project: {
+            numero_copia: 1,
+            edicion: {
+              _id: '$edicion_temp._id',
+              isbn: '$edicion_temp.isbn',
+              idioma: '$edicion_temp.idioma',
+              año: '$edicion_temp.año',
+              libro: {
+                _id: '$libro_temp._id',
+                titulo: '$libro_temp.titulo',
+                autores: '$autores_temp'
+              }
+            },
+            prestamos_activos: { $size: '$prestamos_activos_temp' }
+          }
+        },
+
+        // Ordenar por número de copia
+        { $sort: { numero_copia: 1 } }
+      ])
+      .toArray();
+  },
 };

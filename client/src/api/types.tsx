@@ -21,7 +21,7 @@ export interface Edicion {
 }
 
 export interface Copia {
-  id: number;
+  _id: number;
   edicion_id: number;
   numero_copia: number;
 }
@@ -34,20 +34,55 @@ export interface Libro {
 }
 
 export interface Usuario {
-  id: number;
+  _id: number;
+  RUT: string;
   nombre: string;
-  apellido: string;
-  email: string;
-  telefono?: string;
-  direccion?: string;
 }
 
 export interface Prestamo {
-  id: number;
-  copiaId: number;
-  usuarioId: number;
-  fechaPrestamo: string;
-  fechaDevolucionEsperada: string;
-  fechaDevolucionReal?: string;
-  estado: 'activo' | 'devuelto' | 'vencido';
+  _id: number;
+  copia_id: number;
+  usuario_id: number;
+  fecha_prestamo: Date;
+  fecha_devolucion: Date;
+}
+
+export interface PrestamoDetalle {
+  _id: string;
+  fecha_prestamo: string;      
+  fecha_devolucion: string;     
+  copia: {
+    _id: string;
+    numero_copia: number;
+    edicion: {
+      _id: string;
+      isbn: string;
+      idioma: string;
+      año: string;      
+      libro: {
+        _id: string;
+        titulo: string;
+      };
+    };
+  };
+}
+
+export interface CopiaDetalle {
+  _id: string;
+  numero_copia: number;
+  edicion: {
+    _id: string;
+    isbn: string;
+    idioma: string;
+    año: string;
+    libro: {
+      _id: string;
+      titulo: string;
+      autores: Array<{
+        _id: string;
+        nombre: string;
+      }>;
+    };
+  };
+  prestamos_activos: number;
 }

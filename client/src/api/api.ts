@@ -1,5 +1,5 @@
 import { CreateDetalleLibroDto } from "../types/dto/libro.dto";
-import { Libro, Autor, Usuario, Prestamo, PaginatedResponse } from "./types";
+import { Libro, Autor, Usuario, Prestamo, PaginatedResponse, PrestamoDetalle, CopiaDetalle } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -17,9 +17,15 @@ class ApiService {
       throw new Error(`API Error: ${response.statusText}`);
     }
 
+    // Para DELETE exitosos (204), retornar undefined
+    if (response.status === 204 || !response.headers.get('content-length')) {
+      return undefined as T;
+    }
+
     return response.json();
   }
 
+  // Libros
   async getLibros(): Promise<Libro[]> {
     const response = await this.fetchApi<PaginatedResponse<Libro>>('/libros');
     return response.data;
@@ -49,6 +55,7 @@ class ApiService {
     });
   }
 
+  // Autores
   async getAutores(): Promise<Autor[]> {
     const response = await this.fetchApi<PaginatedResponse<Autor>>('/autores');
     return response.data.filter(a => a.nombre != 'anonimo');
@@ -61,21 +68,73 @@ class ApiService {
     });
   }
 
-  async getUsuarios(): Promise<Usuario[]> {
-    return this.fetchApi<Usuario[]>('/usuarios');
+  //Copias
+
+  async getCopias(): Promise<CopiaDetalle[]> {
+    const response = await this.fetchApi<PaginatedResponse<CopiaDetalle>>('/copias');
+    return response.data;
   }
 
-  async createUsuario(data: Omit<Usuario, 'id'>): Promise<Usuario> {
+  // Usuarios
+  async getUsuarios(): Promise<Usuario[]> {
+    const response = await this.fetchApi<PaginatedResponse<Usuario>>('/usuarios');
+    return response.data;
+  }
+
+  async getUsuario(id: string): Promise<Usuario> {
+    return this.fetchApi<Usuario>(`/usuarios/${id}`)
+  }
+
+  async createUsuario(data: Omit<Usuario, '_id'>): Promise<Usuario> {
     return this.fetchApi<Usuario>('/usuarios', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
+  async updateUsuario(id: string, data: { nombre: string }): Promise<{ ok: boolean; message: string }> {
+    return this.fetchApi<{ ok: boolean; message: string }>(`/usuarios/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteUsuario(id: string): Promise<void> {
+    return this.fetchApi<void>(`/usuarios/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getPrestamosUsuario(id: string): Promise<PrestamoDetalle[]> {
+    // El backend devuelve un objeto con el usuario y sus prestamos anidados
+    const response = await this.fetchApi<{
+      _id: string;
+      RUT: string;
+      nombre: string;
+      prestamos: PrestamoDetalle[]
+    }>(`/usuarios/${id}/prestamos`);
+
+    return response.prestamos || [];
+  }
+
+  // Prestamos
   async createPrestamo(data: Omit<Prestamo, 'id' | 'fechaPrestamo' | 'estado'>): Promise<Prestamo> {
     return this.fetchApi<Prestamo>('/prestamos', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  async updatePrestamo(id: string, data: { fecha_prestamo?: string; fecha_devolucion?: string }): Promise<Prestamo> {
+    return this.fetchApi<Prestamo>(`/prestamos/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deletePrestamo(id: string): Promise<void> {
+    return this.fetchApi<void>(`/prestamos/${id}`, {
+      method: 'DELETE',
     });
   }
 

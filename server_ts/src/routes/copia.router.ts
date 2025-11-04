@@ -5,9 +5,28 @@ import { validationMiddleware, validateObjectIds } from '../middlewares';
 import { copiaDB } from '../db/copia.db';
 import { edicionDB } from '../db/edicion.db';
 import type { TypedRequest } from '../interfaces';
-import { ObjectIdDto, AddCopiasDto } from '../dto';
+import { ObjectIdDto, AddCopiasDto, PaginationDto } from '../dto';
 
 export const copiaRouter = Router();
+
+// Cada copia tendrá detalle
+copiaRouter.get(
+  '/',
+  validationMiddleware(PaginationDto, 'query'),
+  async (req: TypedRequest<any, any, PaginationDto>, res: Response, next: NextFunction) => {
+    try {
+      const { limit = 10, offset = 0 } = req.query;
+      const copias = await copiaDB.getManyConDetalle({ limit, offset });
+      
+      res.json({
+        data: copias,
+        pagination: { limit, offset, count: copias.length }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 copiaRouter.get(
   '/edicion/:edicion_id',

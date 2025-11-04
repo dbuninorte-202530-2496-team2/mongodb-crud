@@ -4,6 +4,8 @@ import { Toaster } from 'sonner';
 import BooksPage from './pages/BooksPage'
 import { CreateBookPage } from './pages/CreateBookPage'
         import { BookPage } from './pages/BookPage'
+import { UsersPage } from './pages/UsersPage';
+import UserDetailPage from './pages/UserDetailPage';
 
 function Layout() {
   return (
@@ -19,8 +21,10 @@ function App() {
     createRoutesFromElements(
       <Route path='/' element={<Layout />}>
         <Route index element={<BooksPage />} />
-        <Route path='create-book' element={<CreateBookPage />} />
+        <Route path='book/create' element={<CreateBookPage />} />
         <Route path='book/:id' element={<BookPage/>} /> 
+        <Route path='users' element={<UsersPage/>}/>
+        <Route path='user/:id' element={<UserDetailPage/>}/>
       </Route>
     )
   )
