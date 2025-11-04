@@ -1,5 +1,7 @@
+import { UpdateAutorDto } from "../types/dto/autor.dto";
+import { CreateEdicionDto, UpdateEdicionDto } from "../types/dto/edicion.dto";
 import { CreateDetalleLibroDto } from "../types/dto/libro.dto";
-import { Libro, Autor, Usuario, Prestamo, PaginatedResponse, PrestamoDetalle, CopiaDetalle } from "./types";
+import { Libro, Autor, Usuario, Prestamo, PaginatedResponse, PrestamoDetalle, CopiaDetalle, Edicion, Copia } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -61,10 +63,46 @@ class ApiService {
     return response.data.filter(a => a.nombre != 'anonimo');
   }
 
-  async createAutor(data: Omit<Autor, 'id'>): Promise<Autor> {
-    return this.fetchApi<Autor>('/autores', {
+  async updateAutor(autorId: string, data: UpdateAutorDto): Promise<Autor> {
+    return this.fetchApi<Autor>(`/autores/${autorId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async createAutor(libroId: string, nombre: string): Promise<Autor> {
+    return this.fetchApi<Autor>(`/autores/libro/${libroId}`, {
+      method: 'POST',
+      body: JSON.stringify({ nombre }),
+    });
+  }
+
+  async unlinkAutor(libroId: string, autorId: string): Promise<void> {
+    return this.fetchApi<void>(`/autores/${autorId}/libro/${libroId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  //Edicion
+
+  async createEdicion(libroId: string, data: CreateEdicionDto): Promise<Edicion> {
+    console.log(data)
+    return this.fetchApi<Edicion>(`/ediciones/libro/${libroId}`, {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  async updateEdicion(edicionId: string, data: UpdateEdicionDto): Promise<Edicion> {
+    return this.fetchApi<Edicion>(`/ediciones/${edicionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteEdicion(edicionId: string): Promise<void> {
+    return this.fetchApi<void>(`/ediciones/${edicionId}`, {
+      method: 'DELETE',
     });
   }
 
@@ -73,6 +111,19 @@ class ApiService {
   async getCopias(): Promise<CopiaDetalle[]> {
     const response = await this.fetchApi<PaginatedResponse<CopiaDetalle>>('/copias');
     return response.data;
+  }
+
+  async createCopia(edicionId: string, cantidad: number): Promise<any> {
+    return this.fetchApi(`/copias/edicion/${edicionId}`, {
+      method: 'POST',
+      body: JSON.stringify({ cantidad }),
+    });
+  }
+
+  async deleteCopia(copiaId: string): Promise<void> {
+    return this.fetchApi<void>(`/copias/${copiaId}`, {
+      method: 'DELETE',
+    });
   }
 
   // Usuarios

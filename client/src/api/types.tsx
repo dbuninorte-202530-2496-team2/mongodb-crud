@@ -8,20 +8,20 @@ export interface PaginatedResponse<T> {
 }
 
 export interface Autor {
-  _id?: number;
+  _id: string;
   nombre: string;
 }
 
 export interface Edicion {
-  _id?: number;
+  _id: string;
   isbn: string;
   idioma: string;
-  año: Date;
-  copias?: Copia[];
+  año: string;
+  copias: Copia[];
 }
 
 export interface Copia {
-  _id: number;
+  _id: string;
   edicion_id: number;
   numero_copia: number;
 }

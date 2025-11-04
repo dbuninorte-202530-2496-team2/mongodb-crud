@@ -1,7 +1,7 @@
 export interface CreateEdicionDto {
   isbn: string;
   idioma: string;
-  año: number;
+  año: string;
   numCopias: number;
 }
 

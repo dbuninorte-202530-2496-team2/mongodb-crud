@@ -1,26 +1,25 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Book, Calendar, Package, User } from 'lucide-react';
-import {api} from '../api/api';
-import { EditableField } from '../components/EditableField';
+import { ArrowLeft, Book } from 'lucide-react';
 import { Libro } from '../api/types';
-import { useParams } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom';
-import { AutoresEditor } from '../components/AutoresEditor';
-import { EdicionesEditor } from '../components/EdicionEditor';
+import { EditableTitleField } from '../components/EditableTitle';
+import AutoresSection from '../components/autor/AutoresSection';
+import { EdicionesSection } from '../components/edicion/EdicionesSection';
+import { api } from '../api/api';
+import { useNavigate, useParams } from 'react-router-dom';
+
 
 export function BookPage() {
+  const navigate = useNavigate();
+
   const [libro, setLibro] = useState<Libro | null>(null);
   const [loading, setLoading] = useState(true);
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [libroData] = await Promise.all([
-        api.getLibro(id!)
-      ]);
-      setLibro(libroData);
+      const data = await api.getLibro(id||'');
+      setLibro(data);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -29,20 +28,12 @@ export function BookPage() {
   };
 
   useEffect(() => {
-    if (id) {
-      loadData();
-    }
-  }, [id])
+    loadData();
+  }, []);
 
-  if (!libro) return <p>Cargando...</p>
-
-  const handleUpdateField = async (field: keyof Libro, value: string) => {
+  const handleUpdateTitulo = async (nuevoTitulo: string) => {
     if (!libro) return;
-    await api.updateLibro(libro._id, { [field]: value });
-    await loadData();
-  };
-
-  const handleReloadData = async () => {
+    await api.updateLibro(libro._id, { titulo: nuevoTitulo });
     await loadData();
   };
 
@@ -67,7 +58,7 @@ export function BookPage() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('..')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -78,15 +69,9 @@ export function BookPage() {
               <Book className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{libro.titulo}</h1>
+              <EditableTitleField titulo={libro.titulo} onSave={handleUpdateTitulo} />
               <p className="text-gray-600 mt-1">
-                {libro.autores && libro.autores.length > 0 ? (
-                  libro.autores.map((a, i) => (
-                    <span key={i} className="block">{a.nombre} </span>
-                  ))
-                ) : (
-                  'Autor desconocido'
-                )}
+                {libro.autores.length} {libro.autores.length === 1 ? 'autor' : 'autores'} • {libro.ediciones.length} {libro.ediciones.length === 1 ? 'edición' : 'ediciones'}
               </p>
             </div>
           </div>
@@ -94,50 +79,17 @@ export function BookPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Información del Libro</h2>
-              <div className="space-y-4">
-                <EditableField
-                  label="Título"
-                  value={libro.titulo}
-                  onSave={(value) => handleUpdateField('titulo', value)}
-                />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Ediciones</h2>
-              {libro.ediciones && libro.ediciones.length > 0 ? (
-                <div className="space-y-4">
-                  {libro.ediciones.map((edicion) => (
-                    <div key={edicion._id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">
-                          {edicion.año instanceof Date ? edicion.año.getFullYear() : edicion.año}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No hay ediciones registradas</p>
-              )}
-            </div>
-
-          <AutoresEditor
-              autores={libro.autores}
-              libroId={libro._id}
-              onUpdate={handleReloadData}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AutoresSection 
+            autores={libro.autores} 
+            libroId={libro._id} 
+            onReload={loadData} 
           />
-
-          <EdicionesEditor
-              ediciones={libro.ediciones}
-              libroId={libro._id}
-              onUpdate={handleReloadData}
+          <EdicionesSection 
+            ediciones={libro.ediciones} 
+            libroId={libro._id} 
+            onUpdate={loadData} 
           />
-          </div>
         </div>
       </main>
     </div>
