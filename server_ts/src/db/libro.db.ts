@@ -2,11 +2,10 @@ import { ObjectId, ClientSession, type InsertManyResult } from 'mongodb';
 import { getClient, getDB } from '../config/db';
 import type { DetalleLibroDto, PaginationDto } from '../dto';
 import { normalizeString } from '../utils/normalizeString';
-
-
-/*
-  PENDIENTE: portear al proyecto autor, autorea, edicion, copia...
-*/
+import { autorDB } from './autor.db';
+import { autoreaDB } from './autorea.db';
+import { edicionDB } from './edicion.db';
+import { copiaDB } from './copia.db';
 
 const COLLECTION_NAME = 'libro';
 
@@ -41,6 +40,25 @@ interface CreateResult {
   edicion_ids: ObjectId[];
 }
 
+interface LibroDetalleResponse {
+  _id: ObjectId;
+  titulo: string;
+  autores: Array<{
+    _id: ObjectId;
+    nombre: string;
+  }>;
+  ediciones: Array<{
+    _id: ObjectId;
+    isbn: string;
+    idioma: string;
+    año: Date;
+    copias: Array<{
+      _id: ObjectId;
+      numero_copia: number;
+    }>;
+  }>;
+}
+
 export const libroDB = {
 
   async createFromDetalleLibro(detalleLibro: DetalleLibroDto): Promise<CreateResult> {
@@ -71,19 +89,19 @@ export const libroDB = {
         ? await autorDB.createMany(pendientes, session)
         : null;
 
-      const nuevosIds = nuevosRes 
-        ? Object.values(nuevosRes.insertedIds) 
+      const nuevosIds = nuevosRes
+        ? Object.values(nuevosRes.insertedIds)
         : [];
 
       const autorIds: ObjectId[] = [
-        ...existentes.map(a => a._id),
+        ...existentes.map(a => a._id!),
         ...nuevosIds
       ];
 
       // 3. RELACION AUTOREA
-      const autoreaDocs: AutoreaDoc[] = autorIds.map(autor_id => ({ 
-        libro_id, 
-        autor_id 
+      const autoreaDocs: AutoreaDoc[] = autorIds.map(autor_id => ({
+        libro_id,
+        autor_id
       }));
       await autoreaDB.createMany(autoreaDocs, session);
 
@@ -113,10 +131,10 @@ export const libroDB = {
 
       await session.commitTransaction();
 
-      return { 
-        libro_id, 
-        autor_ids: autorIds, 
-        edicion_ids: edicionInsertedIds 
+      return {
+        libro_id,
+        autor_ids: autorIds,
+        edicion_ids: edicionInsertedIds
       };
 
     } catch (error) {
@@ -125,18 +143,18 @@ export const libroDB = {
     } finally {
       await session.endSession();
     }
-  },
+    },
 
-  async getMany(paginationDto: PaginationDto): Promise<LibroDoc[]> {
-    const db = getDB();
-    const { limit, offset } = paginationDto;
-    
-    return await db.collection<LibroDoc>(COLLECTION_NAME)
-      .find({})
-      .limit(limit)
-      .skip(offset)
-      .toArray();
-  },
+    async getMany(paginationDto: PaginationDto): Promise<LibroDoc[]> {
+      const db = getDB();
+      const { limit = 10, offset = 0 } = paginationDto;
+
+      return await db.collection<LibroDoc>(COLLECTION_NAME)
+        .find({})
+        .limit(limit)
+        .skip(offset)
+        .toArray();
+    },
 
   async getOneById(id: ObjectId): Promise<LibroDoc | null> {
     const db = getDB();
@@ -144,10 +162,194 @@ export const libroDB = {
       .findOne({ _id: id });
   },
 
+  async getManyDetalle(paginationDto: PaginationDto): Promise<LibroDetalleResponse[]> {
+    const db = getDB();
+    const { limit = 10, offset = 0 } = paginationDto;
+
+    return await db.collection(COLLECTION_NAME)
+      .aggregate<LibroDetalleResponse>([
+        { $skip: offset },
+        { $limit: limit },
+
+        {
+          $lookup: {
+            from: 'autorea',
+            localField: '_id',
+            foreignField: 'libro_id',
+            as: 'autorea_relations'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'autor',
+            localField: 'autorea_relations.autor_id',
+            foreignField: '_id',
+            as: 'autores'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'edicion',
+            localField: '_id',
+            foreignField: 'libro_id',
+            as: 'ediciones'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'copia',
+            localField: 'ediciones._id',
+            foreignField: 'edicion_id',
+            as: 'copias_temp'
+          }
+        },
+
+        {
+          $addFields: {
+            ediciones: {
+              $map: {
+                input: '$ediciones',
+                as: 'edicion',
+                in: {
+                  _id: '$$edicion._id',
+                  isbn: '$$edicion.isbn',
+                  idioma: '$$edicion.idioma',
+                  año: '$$edicion.año',
+                  copias: {
+                    $filter: {
+                      input: '$copias_temp',
+                      as: 'copia',
+                      cond: { $eq: ['$$copia.edicion_id', '$$edicion._id'] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        {
+          $project: {
+            titulo: 1,
+            autores: {
+              _id: 1,
+              nombre: 1
+            },
+            ediciones: {
+              _id: 1,
+              isbn: 1,
+              idioma: 1,
+              año: 1,
+              copias: {
+                _id: 1,
+                numero_copia: 1
+              }
+            }
+          }
+        }
+      ])
+      .toArray();
+  },
+
+  async getDetalleById(id: ObjectId): Promise<LibroDetalleResponse | null> {
+    const db = getDB();
+
+    const result = await db.collection(COLLECTION_NAME)
+      .aggregate<LibroDetalleResponse>([
+        { $match: { _id: id } },
+
+        {
+          $lookup: {
+            from: 'autorea',
+            localField: '_id',
+            foreignField: 'libro_id',
+            as: 'autorea_relations'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'autor',
+            localField: 'autorea_relations.autor_id',
+            foreignField: '_id',
+            as: 'autores'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'edicion',
+            localField: '_id',
+            foreignField: 'libro_id',
+            as: 'ediciones'
+          }
+        },
+
+        {
+          $lookup: {
+            from: 'copia',
+            localField: 'ediciones._id',
+            foreignField: 'edicion_id',
+            as: 'copias_temp'
+          }
+        },
+
+        {
+          $addFields: {
+            ediciones: {
+              $map: {
+                input: '$ediciones',
+                as: 'edicion',
+                in: {
+                  _id: '$$edicion._id',
+                  isbn: '$$edicion.isbn',
+                  idioma: '$$edicion.idioma',
+                  año: '$$edicion.año',
+                  copias: {
+                    $filter: {
+                      input: '$copias_temp',
+                      as: 'copia',
+                      cond: { $eq: ['$$copia.edicion_id', '$$edicion._id'] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        {
+          $project: {
+            titulo: 1,
+            autores: {
+              _id: 1,
+              nombre: 1
+            },
+            ediciones: {
+              _id: 1,
+              isbn: 1,
+              idioma: 1,
+              año: 1,
+              copias: {
+                _id: 1,
+                numero_copia: 1
+              }
+            }
+          }
+        }
+      ])
+      .toArray();
+
+    return result[0] || null;
+  },
+
   async updateOne(id: ObjectId, titulo: string) {
     const db = getDB();
     return await db.collection<LibroDoc>(COLLECTION_NAME)
-      .updateOne({ _id: id }, { $set: { titulo } });
+      .updateOne({ _id: id }, { $set: { titulo: normalizeString(titulo) } });
   },
 
   async remove(id: ObjectId) {
@@ -177,19 +379,19 @@ export const libroDB = {
 
         // 3. Eliminar préstamos asociados
         await db.collection('prestamo').deleteMany(
-          { copia_id: { $in: copiaIds } }, 
+          { copia_id: { $in: copiaIds } },
           { session }
         );
 
         // 4. Eliminar copias
         await db.collection('copia').deleteMany(
-          { edicion_id: { $in: edicionIds } }, 
+          { edicion_id: { $in: edicionIds } },
           { session }
         );
 
         // 5. Eliminar ediciones
         await db.collection('edicion').deleteMany(
-          { libro_id }, 
+          { libro_id },
           { session }
         );
 
@@ -201,7 +403,7 @@ export const libroDB = {
 
         // 7. Eliminar relaciones autorea
         await db.collection('autorea').deleteMany(
-          { libro_id }, 
+          { libro_id },
           { session }
         );
 
@@ -218,14 +420,14 @@ export const libroDB = {
         // 9. Eliminar autores huérfanos
         if (autoresHuerfanosIds.length > 0) {
           await db.collection('autor').deleteMany(
-            { _id: { $in: autoresHuerfanosIds } }, 
+            { _id: { $in: autoresHuerfanosIds } },
             { session }
           );
         }
 
         // 10. Finalmente, eliminar el libro
         await db.collection('libro').deleteOne(
-          { _id: libro_id }, 
+          { _id: libro_id },
           { session }
         );
       });

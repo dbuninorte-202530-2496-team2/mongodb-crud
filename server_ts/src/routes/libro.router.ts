@@ -1,30 +1,30 @@
-import { Router, type Response, type NextFunction } from 'express';
+import { Router, type Response, type NextFunction, type Request } from 'express';
 import { ObjectId } from 'mongodb';
 import createError from 'http-errors';
-import { validationMiddleware } from '../middlewares';
+import { validationMiddleware, } from '../middlewares';
 import { libroDB } from '../db/libro.db';
-import type { TypedRequest } from '../interfaces';
-import { PaginationDto, ObjectIdDto, DetalleLibroDto, UpdateLibroDto} from '../dto';
+import { PaginationDto, ObjectIdDto, DetalleLibroDto, UpdateLibroDto } from '../dto';
+import type { RequestWithValidatedBody, RequestWithValidatedParams, RequestWithValidatedQuery } from '../interfaces';
 
 
 export const libroRouter = Router();
 
-// GET /libros
+/** 
+ * EP to get all libros
+ * This EP receives pagination info in the query
+ */
 libroRouter.get(
   '/',
   validationMiddleware(PaginationDto, 'query'),
-  async (req: TypedRequest<any, any, PaginationDto>, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { limit, offset } = req.query;
-      const libros = await libroDB.getMany(req.query);
+      const typedReq = req as RequestWithValidatedQuery<PaginationDto>;
+      const { limit = 10, offset = 0 } = typedReq.validatedQuery;
+      const libros = await libroDB.getManyDetalle({ limit, offset });
 
       res.json({
         data: libros,
-        pagination: {
-          limit,
-          offset,
-          count: libros.length,
-        },
+        pagination: { limit, offset, count: libros.length },
       });
     } catch (error) {
       next(error);
@@ -32,13 +32,18 @@ libroRouter.get(
   }
 );
 
+/**
+ * EP to get a libro by id
+ * This EP receives the libro id as param
+ */
 libroRouter.get(
   '/:id',
   validationMiddleware(ObjectIdDto, 'params'),
-  async (req: TypedRequest<ObjectIdDto>, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.params;
-      const libro = await libroDB.getOneById(new ObjectId(id));
+      const typedReq = req as RequestWithValidatedParams<ObjectIdDto>;
+      const { id } = typedReq.validatedParams;
+      const libro = await libroDB.getDetalleById(new ObjectId(id));
 
       if (!libro) {
         return next(createError(404, `Libro con id ${id} no encontrado`));
@@ -51,13 +56,18 @@ libroRouter.get(
   }
 );
 
+/** 
+ * EP to create a new libro
+ * This EP receives the libro details in the body
+ */
 libroRouter.post(
   '/',
   validationMiddleware(DetalleLibroDto, 'body'),
-  async (req: TypedRequest<{}, DetalleLibroDto>, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { titulo, autores } = req.body;
-      const insertedIds = await libroDB.createFromDetalleLibro(req.body);
+      const typedReq = req as RequestWithValidatedBody<DetalleLibroDto>;
+      const createData = typedReq.validatedBody;
+      const insertedIds = await libroDB.createFromDetalleLibro(createData);
 
       res.status(201).json(insertedIds);
     } catch (error) {
@@ -66,14 +76,21 @@ libroRouter.post(
   }
 );
 
+/**
+ * EP to update libro title
+ * This EP receives the libro id as param and the new title in the body
+ */
 libroRouter.patch(
   '/:id',
   validationMiddleware(ObjectIdDto, 'params'),
   validationMiddleware(UpdateLibroDto, 'body'),
-  async (req: TypedRequest<ObjectIdDto, UpdateLibroDto>, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.params;
-      const { titulo } = req.body;
+      const typedReq = req as RequestWithValidatedParams<ObjectIdDto>;
+      const { id } = typedReq.validatedParams;
+
+      const bodyReq = req as RequestWithValidatedBody<UpdateLibroDto>;
+      const { titulo } = bodyReq.validatedBody;
 
       const libro_id = new ObjectId(id);
       const result = await libroDB.updateOne(libro_id, titulo);
@@ -89,12 +106,17 @@ libroRouter.patch(
   }
 );
 
+/** 
+ * EP to delete a libro
+ * This EP receives the libro id as param
+ */
 libroRouter.delete(
   '/:id',
   validationMiddleware(ObjectIdDto, 'params'),
-  async (req: TypedRequest<ObjectIdDto>, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.params;
+      const typedReq = req as RequestWithValidatedParams<ObjectIdDto>;
+      const { id } = typedReq.validatedParams;
       const libro_id = new ObjectId(id);
 
       const libro = await libroDB.getOneById(libro_id);

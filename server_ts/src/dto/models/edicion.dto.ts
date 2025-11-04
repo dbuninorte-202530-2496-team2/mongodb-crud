@@ -1,13 +1,13 @@
-import { IsString, IsNotEmpty, IsInt, Min, IsDate } from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, Min, IsDate, IsOptional, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class EdicionDto {
+export class CreateEdicionDto {
   @IsString()
   @IsNotEmpty()
   isbn!: string;
 
-  @Type(() => Date)
-  @IsDate()         
+  @IsDateString()
+  @IsNotEmpty()         
   año!: Date;
 
   @IsString()
@@ -18,4 +18,20 @@ export class EdicionDto {
   @IsInt()
   @Min(1)
   numCopias!: number;
+}
+
+export class UpdateEdicionDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  isbn?: string;
+
+  @IsOptional()
+  @IsDateString()       
+  año!: Date;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  idioma?: string;
 }
