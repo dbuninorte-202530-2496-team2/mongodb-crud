@@ -312,12 +312,12 @@ export default function UserDetailPage() {
                           <div className="flex items-center gap-4 mt-2">
                             <div className="flex items-center gap-2">
                               <Calendar className="w-4 h-4" />
-                              <span>Préstamo: {new Date(prestamo.fecha_prestamo).toLocaleDateString()}</span>
+                              <span>Préstamo: {new Date(prestamo.fecha_prestamo).toISOString().split('T')[0]}</span>
                             </div>
                             {prestamo.fecha_devolucion && (
                               <div className="flex items-center gap-2">
                                 <Calendar className="w-4 h-4" />
-                                <span>Devolución: {new Date(prestamo.fecha_devolucion).toLocaleDateString()}</span>
+                                <span>Devolución: {new Date(prestamo.fecha_devolucion).toISOString().split('T')[0]}</span>
                               </div>
                             )}
                           </div>

@@ -44,7 +44,7 @@ export function PrestamoModal({ copiaId, onClose, onPrestamoCreado }: PrestamoMo
     const data: CreatePrestamoDTO = {
       copia_id: copiaId,
       usuario_id: usuarioSeleccionado,
-      fecha_prestamo: new Date().toISOString() // ✅ Convertir a string ISO
+      fecha_prestamo: new Date().toISOString()
     };
 
     try {
