@@ -43,8 +43,8 @@ export interface Prestamo {
   _id: string;
   copia_id: string;
   usuario_id: string;
-  fecha_prestamo: Date;
-  fecha_devolucion: Date;
+  fecha_prestamo: string;
+  fecha_devolucion: string;
 }
 
 export interface PrestamoDetalle {

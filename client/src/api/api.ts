@@ -112,7 +112,7 @@ class ApiService {
   //Copias
 
   async getCopias(): Promise<CopiaDetalle[]> {
-    const response = await this.fetchApi<PaginatedResponse<CopiaDetalle>>('/copias');
+    const response = await this.fetchApi<PaginatedResponse<CopiaDetalle>>('/copias?limit=1000');
     return response.data;
   }
 
@@ -131,7 +131,7 @@ class ApiService {
 
   // Usuarios
   async getUsuarios(): Promise<Usuario[]> {
-    const response = await this.fetchApi<PaginatedResponse<Usuario>>('/usuarios');
+    const response = await this.fetchApi<PaginatedResponse<Usuario>>('/usuarios?limit=1000');
     return response.data;
   }
 
@@ -192,13 +192,13 @@ class ApiService {
     });
   }
 
-  async devolverPrestamo(id: number): Promise<Prestamo> {
+  async devolverPrestamo(id: string): Promise<Prestamo> {
     return this.fetchApi<Prestamo>(`/prestamos/${id}/devolver`, {
       method: 'PATCH',
     });
   }
 
-  async getPrestamosByCopia(copiaId: number): Promise<Prestamo[]> {
+  async getPrestamosByCopia(copiaId: string): Promise<Prestamo[]> {
     return this.fetchApi<Prestamo[]>(`/prestamos?copiaId=${copiaId}`);
   }
 }

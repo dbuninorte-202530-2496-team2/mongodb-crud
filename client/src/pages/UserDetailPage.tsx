@@ -20,6 +20,10 @@ export default function UserDetailPage() {
     fecha_prestamo: '',
     fecha_devolucion: ''
   });
+  const [originalPrestamo, setOriginalPrestamo] = useState({
+    fecha_prestamo: '',
+    fecha_devolucion: ''
+  });
 
   useEffect(() => {
     if (id) {
@@ -79,21 +83,47 @@ export default function UserDetailPage() {
   };
 
   const startEditPrestamo = (prestamo: PrestamoDetalle) => {
+    const fechaPrestamo = prestamo.fecha_prestamo.split('T')[0];
+    const fechaDevolucion = prestamo.fecha_devolucion?.split('T')[0] || '';
+    
     setEditingPrestamo(prestamo._id);
     setPrestamoForm({
-      fecha_prestamo: prestamo.fecha_prestamo.split('T')[0],
-      fecha_devolucion: prestamo.fecha_devolucion?.split('T')[0] || ''
+      fecha_prestamo: fechaPrestamo,
+      fecha_devolucion: fechaDevolucion
+    });
+    // Guardar valores originales para comparar
+    setOriginalPrestamo({
+      fecha_prestamo: fechaPrestamo,
+      fecha_devolucion: fechaDevolucion
     });
   };
 
   const handleUpdatePrestamo = async (prestamoId: string) => {
     try {
-      const updateData: any = {};
-      if (prestamoForm.fecha_prestamo) {
-        updateData.fecha_prestamo = prestamoForm.fecha_prestamo;
+      const updateData: { fecha_prestamo?: string; fecha_devolucion?: string } = {};
+      
+      // Solo incluir campos que realmente cambiaron
+      if (prestamoForm.fecha_prestamo !== originalPrestamo.fecha_prestamo) {
+        // Convertir a ISO string con hora al inicio del día
+        const date = new Date(prestamoForm.fecha_prestamo + 'T00:00:00');
+        updateData.fecha_prestamo = date.toISOString();
       }
-      if (prestamoForm.fecha_devolucion) {
-        updateData.fecha_devolucion = prestamoForm.fecha_devolucion;
+      
+      if (prestamoForm.fecha_devolucion !== originalPrestamo.fecha_devolucion) {
+        if (prestamoForm.fecha_devolucion) {
+          const date = new Date(prestamoForm.fecha_devolucion + 'T00:00:00');
+          updateData.fecha_devolucion = date.toISOString();
+        } else {
+          // Si se borró la fecha de devolución, enviar null o string vacío según backend
+          updateData.fecha_devolucion = '';
+        }
+      }
+
+      // Si no hay cambios, no hacer la petición
+      if (Object.keys(updateData).length === 0) {
+        toast.info('No hay cambios para guardar');
+        setEditingPrestamo(null);
+        return;
       }
 
       await api.updatePrestamo(prestamoId, updateData);
