@@ -151,8 +151,9 @@ prestamoRouter.patch(
             }
 
             if (fecha_devolucion && fecha_prestamo) {
-                if (new Date(fecha_devolucion) < new Date(fecha_prestamo))
-                    throw new Error('La devolución debe ocurrir después del préstamo')
+                if (new Date(fecha_devolucion) < new Date(fecha_prestamo)) {
+                    return next(createError(409, 'La devolución debe ocurrir después del préstamo'))
+                }
             }
 
             // Verificar que hay algo que actualizar

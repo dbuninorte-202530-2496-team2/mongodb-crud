@@ -99,42 +99,34 @@ export default function UserDetailPage() {
   };
 
   const handleUpdatePrestamo = async (prestamoId: string) => {
-    try {
-      const updateData: { fecha_prestamo?: string; fecha_devolucion?: string } = {};
-      
-      // Solo incluir campos que realmente cambiaron
-      if (prestamoForm.fecha_prestamo !== originalPrestamo.fecha_prestamo) {
-        // Convertir a ISO string con hora al inicio del día
-        const date = new Date(prestamoForm.fecha_prestamo + 'T00:00:00');
-        updateData.fecha_prestamo = date.toISOString();
-      }
-      
-      if (prestamoForm.fecha_devolucion !== originalPrestamo.fecha_devolucion) {
-        if (prestamoForm.fecha_devolucion) {
-          const date = new Date(prestamoForm.fecha_devolucion + 'T00:00:00');
-          updateData.fecha_devolucion = date.toISOString();
-        } else {
-          // Si se borró la fecha de devolución, enviar null o string vacío según backend
-          updateData.fecha_devolucion = '';
-        }
-      }
+  try {
+    // Encontrar el préstamo original
+    const prestamoOriginal = prestamos.find(p => p._id === prestamoId);
+    if (!prestamoOriginal) return;
 
-      // Si no hay cambios, no hacer la petición
-      if (Object.keys(updateData).length === 0) {
-        toast.info('No hay cambios para guardar');
-        setEditingPrestamo(null);
-        return;
+    const updateData: { fecha_prestamo: string; fecha_devolucion?: string } = {
+      fecha_prestamo: prestamoForm.fecha_prestamo !== originalPrestamo.fecha_prestamo
+        ? new Date(prestamoForm.fecha_prestamo + 'T00:00:00').toISOString()
+        : prestamoOriginal.fecha_prestamo,
+    };
+    
+    if (prestamoForm.fecha_devolucion !== originalPrestamo.fecha_devolucion) {
+      if (prestamoForm.fecha_devolucion) {
+        updateData.fecha_devolucion = new Date(prestamoForm.fecha_devolucion + 'T00:00:00').toISOString();
       }
-
-      await api.updatePrestamo(prestamoId, updateData);
-      toast.success('Préstamo actualizado');
-      setEditingPrestamo(null);
-      await loadData();
-    } catch (error) {
-      toast.error('Error actualizando préstamo');
-      console.error('Error updating prestamo:', error);
+    } else if (prestamoOriginal.fecha_devolucion) {
+      updateData.fecha_devolucion = prestamoOriginal.fecha_devolucion;
     }
-  };
+
+    await api.updatePrestamo(prestamoId, updateData);
+    toast.success('Préstamo actualizado');
+    setEditingPrestamo(null);
+    await loadData();
+  } catch (error) {
+    toast.error('Error actualizando préstamo');
+    console.error('Error updating prestamo:', error);
+  }
+};
 
   const handleDeletePrestamo = async (prestamoId: string) => {
     if (!confirm('¿Eliminar este préstamo?')) return;
