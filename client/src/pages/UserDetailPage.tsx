@@ -20,6 +20,10 @@ export default function UserDetailPage() {
     fecha_prestamo: '',
     fecha_devolucion: ''
   });
+  const [originalPrestamo, setOriginalPrestamo] = useState({
+    fecha_prestamo: '',
+    fecha_devolucion: ''
+  });
 
   useEffect(() => {
     if (id) {
@@ -79,32 +83,50 @@ export default function UserDetailPage() {
   };
 
   const startEditPrestamo = (prestamo: PrestamoDetalle) => {
+    const fechaPrestamo = prestamo.fecha_prestamo.split('T')[0];
+    const fechaDevolucion = prestamo.fecha_devolucion?.split('T')[0] || '';
+    
     setEditingPrestamo(prestamo._id);
     setPrestamoForm({
-      fecha_prestamo: prestamo.fecha_prestamo.split('T')[0],
-      fecha_devolucion: prestamo.fecha_devolucion?.split('T')[0] || ''
+      fecha_prestamo: fechaPrestamo,
+      fecha_devolucion: fechaDevolucion
+    });
+    // Guardar valores originales para comparar
+    setOriginalPrestamo({
+      fecha_prestamo: fechaPrestamo,
+      fecha_devolucion: fechaDevolucion
     });
   };
 
   const handleUpdatePrestamo = async (prestamoId: string) => {
-    try {
-      const updateData: any = {};
-      if (prestamoForm.fecha_prestamo) {
-        updateData.fecha_prestamo = prestamoForm.fecha_prestamo;
-      }
-      if (prestamoForm.fecha_devolucion) {
-        updateData.fecha_devolucion = prestamoForm.fecha_devolucion;
-      }
+  try {
+    // Encontrar el préstamo original
+    const prestamoOriginal = prestamos.find(p => p._id === prestamoId);
+    if (!prestamoOriginal) return;
 
-      await api.updatePrestamo(prestamoId, updateData);
-      toast.success('Préstamo actualizado');
-      setEditingPrestamo(null);
-      await loadData();
-    } catch (error) {
-      toast.error('Error actualizando préstamo');
-      console.error('Error updating prestamo:', error);
+    const updateData: { fecha_prestamo: string; fecha_devolucion?: string } = {
+      fecha_prestamo: prestamoForm.fecha_prestamo !== originalPrestamo.fecha_prestamo
+        ? new Date(prestamoForm.fecha_prestamo + 'T00:00:00').toISOString()
+        : prestamoOriginal.fecha_prestamo,
+    };
+    
+    if (prestamoForm.fecha_devolucion !== originalPrestamo.fecha_devolucion) {
+      if (prestamoForm.fecha_devolucion) {
+        updateData.fecha_devolucion = new Date(prestamoForm.fecha_devolucion + 'T00:00:00').toISOString();
+      }
+    } else if (prestamoOriginal.fecha_devolucion) {
+      updateData.fecha_devolucion = prestamoOriginal.fecha_devolucion;
     }
-  };
+
+    await api.updatePrestamo(prestamoId, updateData);
+    toast.success('Préstamo actualizado');
+    setEditingPrestamo(null);
+    await loadData();
+  } catch (error) {
+    toast.error('Error actualizando préstamo');
+    console.error('Error updating prestamo:', error);
+  }
+};
 
   const handleDeletePrestamo = async (prestamoId: string) => {
     if (!confirm('¿Eliminar este préstamo?')) return;
@@ -282,12 +304,12 @@ export default function UserDetailPage() {
                           <div className="flex items-center gap-4 mt-2">
                             <div className="flex items-center gap-2">
                               <Calendar className="w-4 h-4" />
-                              <span>Préstamo: {new Date(prestamo.fecha_prestamo).toLocaleDateString()}</span>
+                              <span>Préstamo: {new Date(prestamo.fecha_prestamo).toISOString().split('T')[0]}</span>
                             </div>
                             {prestamo.fecha_devolucion && (
                               <div className="flex items-center gap-2">
                                 <Calendar className="w-4 h-4" />
-                                <span>Devolución: {new Date(prestamo.fecha_devolucion).toLocaleDateString()}</span>
+                                <span>Devolución: {new Date(prestamo.fecha_devolucion).toISOString().split('T')[0]}</span>
                               </div>
                             )}
                           </div>

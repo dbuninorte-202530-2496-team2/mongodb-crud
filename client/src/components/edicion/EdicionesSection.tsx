@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Edit2, Package, Plus, Trash2, X } from "lucide-react";
 import { api } from "../../api/api";
 import { capitalize } from "../../utils/stringFormatting";
+import { toast } from "sonner";
 
 interface Copia {
   _id: string;
@@ -107,6 +108,7 @@ export function EdicionesSection({ ediciones, libroId, onUpdate }: EdicionesEdit
       await api.deleteCopia(copiaId);
       onUpdate();
     } catch (error) {
+      toast.error('No es posible eliminar la copia')
       console.error('Error deleting copia:', error);
     } finally {
       setLoading(null);

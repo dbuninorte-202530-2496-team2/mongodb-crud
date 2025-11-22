@@ -73,7 +73,7 @@ prestamoRouter.post(
             const { usuario_id, copia_id, fecha_prestamo, fecha_devolucion } = typedReq.validatedBody;
 
             const db = getDB();
-            
+
             // Verificar si existe el usuario
             const usuario_encontrado = await db.collection<UsuarioDoc>(COLLECTION_NAME_USUARIO)
                 .findOne({ _id: new ObjectId(usuario_id) });
@@ -84,13 +84,13 @@ prestamoRouter.post(
             // Verificar si existe la copia
             const copia_encontrada = await db.collection<CopiaDoc>(COLLECTION_NAME_COPIA)
                 .findOne({ _id: new ObjectId(copia_id) });
-            
+
             if (!copia_encontrada)
                 return next(createError(404, 'No existe una copia con ese ID'));
 
             // Verificar si la copia ya está prestada
             const prestamoActivo = await db.collection<PrestamoDoc>('prestamo')
-                .findOne({ 
+                .findOne({
                     copia_id: new ObjectId(copia_id),
                     fecha_devolucion: { $exists: false }
                 });
@@ -148,6 +148,12 @@ prestamoRouter.patch(
 
             if (fecha_devolucion) {
                 prestamoActualizado.fecha_devolucion = new Date(fecha_devolucion);
+            }
+
+            if (fecha_devolucion && fecha_prestamo) {
+                if (new Date(fecha_devolucion) < new Date(fecha_prestamo)) {
+                    return next(createError(409, 'La devolución debe ocurrir después del préstamo'))
+                }
             }
 
             // Verificar que hay algo que actualizar

@@ -4,7 +4,7 @@ import createError from 'http-errors';
 import { validationMiddleware, validateObjectIds } from '../middlewares';
 import { copiaDB } from '../db/copia.db';
 import { edicionDB } from '../db/edicion.db';
-import type { TypedRequest } from '../interfaces';
+import type { RequestWithValidatedQuery, TypedRequest } from '../interfaces';
 import { ObjectIdDto, AddCopiasDto, PaginationDto } from '../dto';
 
 export const copiaRouter = Router();
@@ -15,7 +15,8 @@ copiaRouter.get(
   validationMiddleware(PaginationDto, 'query'),
   async (req: TypedRequest<any, any, PaginationDto>, res: Response, next: NextFunction) => {
     try {
-      const { limit = 10, offset = 0 } = req.query;
+      const typedReq = req as RequestWithValidatedQuery<PaginationDto>;
+      const { limit = 10, offset = 0 } = typedReq.validatedQuery;
       const copias = await copiaDB.getManyConDetalle({ limit, offset });
       
       res.json({

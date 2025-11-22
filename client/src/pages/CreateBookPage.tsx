@@ -26,6 +26,8 @@ export function CreateBookPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const loadingId = toast.loading('Creando libro...');
         try {
             const detalleLibro = {
                 titulo: formData.titulo,
@@ -33,7 +35,6 @@ export function CreateBookPage() {
                 ediciones: [edicionData],
             };
 
-            toast.loading('Creando libro...');
             await api.createLibro(detalleLibro);
             toast.success('Libro creado exitosamente');
             
@@ -41,6 +42,8 @@ export function CreateBookPage() {
         } catch (error) {
             console.error('Error creating book:', error);
             toast.error('No se pudo crear el libro');
+        } finally {
+            toast.dismiss(loadingId)
         }
     };
 
